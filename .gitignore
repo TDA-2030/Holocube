@@ -1,29 +1,84 @@
-# For PCBs designed using KiCad: http://www.kicad-pcb.org/
-# Format documentation: http://kicad-pcb.org/help/file-formats/
+.config
+*.o
+*.pyc
 
-# Temporary files
-*.000
-*.bak
-*.bck
-*.kicad_pcb-bak
-*.kicad_sch-bak
-*.kicad_prl
-*.sch-bak
+# gtags
+GTAGS
+GRTAGS
+GPATH
+
+# emacs
+.dir-locals.el
+
+# emacs temp file suffixes
 *~
-_autosave-*
-*.tmp
-*-save.pro
-*-save.kicad_pcb
-fp-info-cache
-*-backups
+.#*
+\#*#
 
-# Netlist files (exported from Eeschema)
-*.net
+# eclipse setting
+.settings
 
-# Autorouter files (exported from Pcbnew)
-*.dsn
-*.ses
+# MacOS directory files
+.DS_Store
 
-# Exported BOM files
-*.xml
-*.csv
+# Example project files
+**/examples/**/sdkconfig
+**/examples/**/sdkconfig.old
+**/examples/**/build
+
+**/sdkconfig
+**/sdkconfig.old
+**/build
+**/.idea
+
+# Doc build artifacts
+**/docs/_build/
+**/docs/doxygen_sqlite3.db
+
+# Downloaded font files
+**/docs/_static/DejaVuSans.ttf
+**/docs/_static/NotoSansSC-Regular.otf
+
+# Unit test app files
+tools/unit-test-app/sdkconfig
+tools/unit-test-app/sdkconfig.old
+tools/unit-test-app/build
+tools/unit-test-app/builds
+tools/unit-test-app/output
+
+# IDF monitor test
+tools/test_idf_monitor/outputs
+
+TEST_LOGS
+
+# gcov coverage reports
+*.gcda
+*.gcno
+coverage.info
+coverage_report/
+
+test_multi_heap_host
+
+# VS Code Settings
+.vscode/
+
+# VIM files
+*.swp
+*.swo
+
+# Clion IDE CMake build & config
+.idea/
+cmake-build-*/
+
+# Results for the checking of the Python coding style and static analysis
+.mypy_cache
+flake8_output.txt
+
+# ESP-IDF default build directory name
+build
+
+# lock files for examples and components
+dependencies.lock
+
+# managed_components for examples
+managed_components
