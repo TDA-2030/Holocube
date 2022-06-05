@@ -41,7 +41,7 @@ static const char *TAG = "main";
 #include "hal/i2s_ll.h"
 
 #define I2S_CONFIG_DEFAULT() { \
-    .mode                   = I2S_MODE_MASTER | I2S_MODE_TX | I2S_MODE_RX, \
+    .mode                   = I2S_MODE_MASTER |  I2S_MODE_RX|I2S_MODE_PDM, \
     .sample_rate            = sample_rate, \
     .bits_per_sample        = I2S_BITS_PER_SAMPLE_16BIT, \
     .channel_format         = I2S_CHANNEL_FMT_RIGHT_LEFT, \
@@ -63,16 +63,18 @@ esp_err_t bsp_i2s_init(i2s_port_t i2s_num, uint32_t sample_rate)
     i2s_config_t i2s_config = I2S_CONFIG_DEFAULT();
 
     i2s_pin_config_t pin_config = {
-        .bck_io_num = 22,
-        .ws_io_num = 23,
-        .data_out_num = 19,
+        .bck_io_num = -1,
+        .ws_io_num = 17,
+        .data_out_num = -1,
         .data_in_num = 18,
-        .mck_io_num = 0,
+        .mck_io_num = -1,
     };
 
     ret_val |= i2s_driver_install(i2s_num, &i2s_config, 0, NULL);
     ret_val |= i2s_set_pin(i2s_num, &pin_config);
     ret_val |= i2s_zero_dma_buffer(i2s_num);
+ESP_LOGW(TAG, "set pdm");
+    ret_val |= i2s_set_pdm_rx_down_sample(i2s_num, I2S_PDM_DSR_16S);
 
     return ret_val;
 }
@@ -90,10 +92,10 @@ esp_err_t bsp_i2s_deinit(i2s_port_t i2s_num)
 #define EXAMPLE_LCD_PIXEL_CLOCK_HZ     (40 * 1000 * 1000)
 #define EXAMPLE_LCD_BK_LIGHT_ON_LEVEL  1
 #define EXAMPLE_LCD_BK_LIGHT_OFF_LEVEL !EXAMPLE_LCD_BK_LIGHT_ON_LEVEL
-#define EXAMPLE_PIN_NUM_DATA0          25
-#define EXAMPLE_PIN_NUM_PCLK           26
-#define EXAMPLE_PIN_NUM_CS             14
-#define EXAMPLE_PIN_NUM_DC             27
+#define EXAMPLE_PIN_NUM_DATA0          4
+#define EXAMPLE_PIN_NUM_PCLK           5
+#define EXAMPLE_PIN_NUM_CS             6
+#define EXAMPLE_PIN_NUM_DC             7
 #define EXAMPLE_PIN_NUM_RST            -1
 #define EXAMPLE_PIN_NUM_BK_LIGHT       -1
 
@@ -143,6 +145,7 @@ static esp_err_t _spi_1line_lcd_init(void)
     ESP_ERROR_CHECK(esp_lcd_panel_reset(panel_handle));
     ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle));
     esp_lcd_panel_disp_on_off(panel_handle, 1);
+    esp_lcd_panel_invert_color(panel_handle, 1);
 
     if (EXAMPLE_PIN_NUM_BK_LIGHT >= 0) {
         gpio_config_t bk_gpio_config = {
@@ -176,8 +179,12 @@ static void screen_clear(int color)
         free(buffer);
     }
 }
+#include "nvs_flash.h"
+#include "nvs.h"
 #include "esp_spiffs.h"
 #include "esp_vfs.h"
+#include "settings.h"
+#include "app_sr.h"
 esp_err_t bsp_spiffs_init(char *partition_label, char *mount_point, size_t max_files)
 {
     esp_vfs_spiffs_conf_t conf = {
@@ -207,30 +214,40 @@ esp_err_t bsp_spiffs_init(char *partition_label, char *mount_point, size_t max_f
 void app_main()
 {
     esp_err_t ret;
-    ESP_LOGI(TAG, "*** Start Example. ***");
+    ESP_LOGI(TAG, "Compile time: %s %s", __DATE__, __TIME__);
+    /* Initialize NVS. */
+    esp_err_t err = nvs_flash_init();
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        err = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(err);
+    ESP_ERROR_CHECK(settings_read_parameter_from_nvs());
 
     _spi_1line_lcd_init();
     screen_clear(0xdd);
 
     bsp_i2s_init(I2S_NUM_0, 16000);
-    ESP_ERROR_CHECK(bsp_i2c_init(I2C_NUM_0, 100000, 5, 4));
+    // ESP_ERROR_CHECK(bsp_i2c_init(I2C_NUM_0, 100000, 5, 4));
 
-    // bsp_i2c_probe();
+    // // bsp_i2c_probe();
 
-    WM8978_Init();
+    // WM8978_Init();
 
-    WM8978_HPvol_Set(32, 32);
-    WM8978_SPKvol_Set(40);
+    // WM8978_HPvol_Set(32, 32);
+    // WM8978_SPKvol_Set(40);
 
-    ESP_ERROR_CHECK(bsp_spiffs_init("storage", "/spiffs", 2));
+    // ESP_ERROR_CHECK(bsp_spiffs_init("storage", "/spiffs", 2));
+    ESP_ERROR_CHECK(bsp_spiffs_init("model", "/srmodel", 4));
 
-    while (1)
-    {WM8978_SPKvol_Set(40);
-        esp_err_t sr_echo_play(char audio_file[]);
-        sr_echo_play("/spiffs/echo_cn_wake.wav");
-        vTaskDelay(pdMS_TO_TICKS(500));
-    }
-    
+    // while (1)
+    // {WM8978_SPKvol_Set(40);
+    //     esp_err_t sr_echo_play(char audio_file[]);
+    //     sr_echo_play("/spiffs/echo_cn_wake.wav");
+    //     vTaskDelay(pdMS_TO_TICKS(500));
+    // }
+    ESP_LOGI(TAG, "speech recognition start");
+    // app_sr_start(false);
 
     void ap_start(void);
     ap_start();
