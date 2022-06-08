@@ -41,7 +41,7 @@ static const char *TAG = "main";
 #include "hal/i2s_ll.h"
 
 #define I2S_CONFIG_DEFAULT() { \
-    .mode                   = I2S_MODE_MASTER |  I2S_MODE_RX|I2S_MODE_PDM, \
+    .mode                   = I2S_MODE_MASTER | I2S_MODE_TX | I2S_MODE_RX, \
     .sample_rate            = sample_rate, \
     .bits_per_sample        = I2S_BITS_PER_SAMPLE_16BIT, \
     .channel_format         = I2S_CHANNEL_FMT_RIGHT_LEFT, \
@@ -63,18 +63,18 @@ esp_err_t bsp_i2s_init(i2s_port_t i2s_num, uint32_t sample_rate)
     i2s_config_t i2s_config = I2S_CONFIG_DEFAULT();
 
     i2s_pin_config_t pin_config = {
-        .bck_io_num = -1,
-        .ws_io_num = 17,
-        .data_out_num = -1,
-        .data_in_num = 18,
-        .mck_io_num = -1,
+        .bck_io_num = 13,
+        .ws_io_num = 14,
+        .data_out_num = 11,
+        .data_in_num = 12,
+        .mck_io_num = 10,
     };
 
     ret_val |= i2s_driver_install(i2s_num, &i2s_config, 0, NULL);
     ret_val |= i2s_set_pin(i2s_num, &pin_config);
     ret_val |= i2s_zero_dma_buffer(i2s_num);
-ESP_LOGW(TAG, "set pdm");
-    ret_val |= i2s_set_pdm_rx_down_sample(i2s_num, I2S_PDM_DSR_16S);
+// ESP_LOGW(TAG, "set pdm");
+    // ret_val |= i2s_set_pdm_rx_down_sample(i2s_num, I2S_PDM_DSR_16S);
 
     return ret_val;
 }
@@ -89,15 +89,15 @@ esp_err_t bsp_i2s_deinit(i2s_port_t i2s_num)
     return ret_val;
 }
 
-#define EXAMPLE_LCD_PIXEL_CLOCK_HZ     (40 * 1000 * 1000)
-#define EXAMPLE_LCD_BK_LIGHT_ON_LEVEL  1
+#define EXAMPLE_LCD_PIXEL_CLOCK_HZ     (60 * 1000 * 1000)
+#define EXAMPLE_LCD_BK_LIGHT_ON_LEVEL  0
 #define EXAMPLE_LCD_BK_LIGHT_OFF_LEVEL !EXAMPLE_LCD_BK_LIGHT_ON_LEVEL
-#define EXAMPLE_PIN_NUM_DATA0          4
-#define EXAMPLE_PIN_NUM_PCLK           5
-#define EXAMPLE_PIN_NUM_CS             6
-#define EXAMPLE_PIN_NUM_DC             7
-#define EXAMPLE_PIN_NUM_RST            -1
-#define EXAMPLE_PIN_NUM_BK_LIGHT       -1
+#define EXAMPLE_PIN_NUM_DATA0          48
+#define EXAMPLE_PIN_NUM_PCLK           21
+#define EXAMPLE_PIN_NUM_CS             1
+#define EXAMPLE_PIN_NUM_DC             18
+#define EXAMPLE_PIN_NUM_RST            47
+#define EXAMPLE_PIN_NUM_BK_LIGHT       38
 
 // The pixel number in horizontal and vertical
 #define EXAMPLE_LCD_H_RES              240
@@ -112,6 +112,15 @@ static esp_lcd_panel_io_handle_t io_handle = NULL;
 static esp_err_t _spi_1line_lcd_init(void)
 {
     esp_err_t ret_val = ESP_OK;
+
+    // gpio_config_t bk_gpio_config = {
+    //         .mode = GPIO_MODE_OUTPUT,
+    //         .pin_bit_mask = BIT64(47)
+    //     };
+    //     ESP_ERROR_CHECK(gpio_config(&bk_gpio_config));
+    //     gpio_set_level(47, 1);vTaskDelay(pdMS_TO_TICKS(200));
+    //     gpio_set_level(47, 0);vTaskDelay(pdMS_TO_TICKS(200));
+    //     gpio_set_level(47, 1);vTaskDelay(pdMS_TO_TICKS(200));
 
     spi_bus_config_t buscfg = {
         .sclk_io_num = EXAMPLE_PIN_NUM_PCLK,
@@ -144,8 +153,8 @@ static esp_err_t _spi_1line_lcd_init(void)
     ESP_ERROR_CHECK(esp_lcd_new_panel_st7789(io_handle, &panel_config, &panel_handle));
     ESP_ERROR_CHECK(esp_lcd_panel_reset(panel_handle));
     ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle));
-    esp_lcd_panel_disp_on_off(panel_handle, 1);
-    esp_lcd_panel_invert_color(panel_handle, 1);
+    // esp_lcd_panel_disp_on_off(panel_handle, 1);
+    // esp_lcd_panel_invert_color(panel_handle, 1);
 
     if (EXAMPLE_PIN_NUM_BK_LIGHT >= 0) {
         gpio_config_t bk_gpio_config = {
@@ -228,20 +237,24 @@ void app_main()
     screen_clear(0xdd);
 
     bsp_i2s_init(I2S_NUM_0, 16000);
-    // ESP_ERROR_CHECK(bsp_i2c_init(I2C_NUM_0, 100000, 5, 4));
+    ESP_ERROR_CHECK(bsp_i2c_init(I2C_NUM_0, 100000, 16, 17));
 
-    // // bsp_i2c_probe();
+    bsp_i2c_probe();
 
-    // WM8978_Init();
+    vTaskDelay(pdMS_TO_TICKS(500));
+
+    WM8978_Init();
+    // WM8978_PlayMode();
+    WM8978_RecoMode();
 
     // WM8978_HPvol_Set(32, 32);
     // WM8978_SPKvol_Set(40);
 
-    // ESP_ERROR_CHECK(bsp_spiffs_init("storage", "/spiffs", 2));
-    ESP_ERROR_CHECK(bsp_spiffs_init("model", "/srmodel", 4));
+    ESP_ERROR_CHECK(bsp_spiffs_init("storage", "/spiffs", 2));
+    // ESP_ERROR_CHECK(bsp_spiffs_init("model", "/srmodel", 4));
 
     // while (1)
-    // {WM8978_SPKvol_Set(40);
+    // {WM8978_SPKvol_Set(60);
     //     esp_err_t sr_echo_play(char audio_file[]);
     //     sr_echo_play("/spiffs/echo_cn_wake.wav");
     //     vTaskDelay(pdMS_TO_TICKS(500));

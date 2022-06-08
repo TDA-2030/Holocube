@@ -30,7 +30,7 @@ uint8_t WM8978_WriteReg(uint8_t RegAddr, uint16_t Value)
     uint8_t d[2];
     d[0] = ((RegAddr << 1) & 0xFE) | ((Value >> 8) & 0x1);
     d[1] = Value & 0xFF;
-    esp_err_t ret = i2c_bus_write_bytes(i2c_handle, RegAddr, 2, d);
+    esp_err_t ret = i2c_bus_write_bytes(i2c_handle, NULL_I2C_MEM_ADDR, 2, d);
 	if (ESP_OK != ret)
 	{
 		ESP_LOGE("TAG", "reg=0x%x, i2c err %d(%s)", RegAddr, ret, esp_err_to_name(ret));
