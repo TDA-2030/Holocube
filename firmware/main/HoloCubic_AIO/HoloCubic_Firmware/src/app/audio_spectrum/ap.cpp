@@ -4,22 +4,18 @@
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "esp_system.h"
 #include "esp_log.h"
 #include "esp_check.h"
 #include "esp_heap_caps.h"
-#include "driver/i2s.h"
-#include "esp_lcd_panel_io.h"
-#include "esp_lcd_panel_vendor.h"
-#include "esp_lcd_panel_ops.h"
 #include "esp_timer.h"
+#include "driver/i2s.h"
 #include <math.h>
 #include "esp_dsp.h"
+#include "driver/display.h"
 
 static const char *TAG = "spectrum";
 
 static uint64_t g_period = 0;
-extern esp_lcd_panel_handle_t panel_handle;
 
 #define AUDIO_RATE 30000
 #define N_SAMPLES 1024
@@ -253,36 +249,15 @@ static uint16_t rgb888_to_565(uint8_t r, uint8_t g, uint8_t b)
     return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 }
 
-static void screen_clear(int color)
-{
-    int w = 320;
-    int h = 240;
-    uint16_t *buffer = malloc(w * sizeof(uint16_t));
-    if (NULL == buffer) {
-        return;
-    } else {
-        for (size_t i = 0; i < w; i++) {
-            buffer[i] = color;
-        }
-
-        for (int y = 0; y < h; y++) {
-            esp_lcd_panel_draw_bitmap(panel_handle, 0, y, w, y + 1, buffer);
-        }
-
-        free(buffer);
-    }
-}
-
 static void _lcd_init()
 {
-    screen_clear(rgb888_to_565(0, 0, 0));
     float df = AUDIO_RATE / N_SAMPLES;
     uint16_t p[20];
     memset(p, 255, 40);
     for (size_t i = 0; i <= AUDIO_RATE / 2; i += 1000) {
         int xx = (float)i / df;
         xx = xx * 320 / (N_SAMPLES / 2);
-        esp_lcd_panel_draw_bitmap(panel_handle, xx, 120, xx + 1, 130, p);
+        lcd_draw_bitmap(xx, 120, 1, 10, p);
     }
 }
 
@@ -337,7 +312,7 @@ static void disp_fft(uint16_t *fb, uint16_t xx, int16_t yy, uint16_t w, uint16_t
 
     }
 
-    esp_lcd_panel_draw_bitmap(panel_handle, xx, yy, xx + w, yy + h, fb);
+    lcd_draw_bitmap(xx, yy, w, h, fb);
 }
 
 // indata: L, R, L, R, ......
@@ -395,20 +370,20 @@ static void fft_task(void *args)
     esp_err_t ret = ESP_OK;
     uint8_t *abuffer = NULL;
     uint16_t *disp_buf = NULL;
+    size_t chunk_size = sizeof(int16_t) * 2 * N_SAMPLES;
     float *y_cf = NULL;
     float *wind = NULL;
     // Window coefficients
-    wind = heap_caps_aligned_alloc(16, sizeof(float) * N_SAMPLES, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    wind = (float*)heap_caps_aligned_alloc(16, sizeof(float) * N_SAMPLES, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
     ESP_GOTO_ON_FALSE(NULL != wind, ESP_ERR_NO_MEM, exit, TAG, "no mem for window");
     // working complex array
-    y_cf = heap_caps_aligned_alloc(16, sizeof(float) * N_SAMPLES * 2, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    y_cf = (float*)heap_caps_aligned_alloc(16, sizeof(float) * N_SAMPLES * 2, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
     ESP_GOTO_ON_FALSE(NULL != y_cf, ESP_ERR_NO_MEM, exit, TAG, "no mem for result");
 
-    disp_buf = heap_caps_calloc(1, sizeof(uint16_t) * 240 * 240, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    disp_buf = (uint16_t*)heap_caps_calloc(1, sizeof(uint16_t) * 240 * 240, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
     ESP_GOTO_ON_FALSE(NULL != disp_buf, ESP_ERR_NO_MEM, exit, TAG, "no mem for disp_buf");
 
-    size_t chunk_size = sizeof(int16_t) * 2 * N_SAMPLES;
-    abuffer = heap_caps_malloc(chunk_size, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    abuffer = (uint8_t *)heap_caps_malloc(chunk_size, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
     ESP_GOTO_ON_FALSE(NULL != abuffer, ESP_ERR_NO_MEM, exit, TAG, "no mem for chunk buffer");
     size_t bytes_read;
 

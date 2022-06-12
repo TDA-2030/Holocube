@@ -1,5 +1,9 @@
-#ifndef SD_CARD_H
-#define SD_CARD_H
+#ifndef __SD_CARD_H__
+#define __SD_CARD_H__
+
+#include <stdint.h>
+
+#ifdef __cplusplus
 
 #include "FS.h"
 #include "SD.h"
@@ -71,5 +75,7 @@ public:
 
     void fileIO(const char *path);
 };
+
+#endif
 
 #endif

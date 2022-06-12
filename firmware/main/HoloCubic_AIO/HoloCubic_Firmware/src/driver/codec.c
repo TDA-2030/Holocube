@@ -65,21 +65,15 @@ void codec_init(void)
 // WM8978_HPvol_Set(32, 32);
 // WM8978_SPKvol_Set(40);
 
-    ESP_ERROR_CHECK(bsp_spiffs_init("storage", "/spiffs", 2));
-// ESP_ERROR_CHECK(bsp_spiffs_init("model", "/srmodel", 4));
-
 // while (1)
 // {WM8978_SPKvol_Set(60);
 //     esp_err_t sr_echo_play(char audio_file[]);
 //     sr_echo_play("/spiffs/echo_cn_wake.wav");
 //     vTaskDelay(pdMS_TO_TICKS(500));
 // }
-    ESP_LOGI(TAG, "speech recognition start");
+    // ESP_LOGI(TAG, "speech recognition start");
 // app_sr_start(false);
 
-    void ap_start(void);
-    ap_start();
-    ESP_LOGI(TAG, "exit");
 }
 
 

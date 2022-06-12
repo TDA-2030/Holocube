@@ -1,5 +1,9 @@
-#ifndef NETWORK_H
-#define NETWORK_H
+#ifndef __NETWORK_H__
+#define __NETWORK_H__
+
+#include <stdint.h>
+
+#ifdef __cplusplus
 
 // 时区偏移(小时) 8*60*60
 #define TIMEZERO_OFFSIZE (28800000)
@@ -61,5 +65,7 @@ public:
     boolean close_wifi(void);
     boolean open_ap(const char *ap_ssid = AP_SSID, const char *ap_password = NULL);
 };
+
+#endif
 
 #endif

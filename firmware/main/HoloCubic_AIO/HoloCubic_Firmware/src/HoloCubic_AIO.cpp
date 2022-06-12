@@ -27,18 +27,17 @@
 #include "app/weather_old/weather_old.h"
 #include "app/anniversary/anniversary.h"
 #include "app/heartbeat/heartbeat.h"
+#include "app/audio_spectrum/audio_spectrum.h"
 
 #include <SPIFFS.h>
 #include <esp32-hal.h>
 #include <esp32-hal-timer.h>
 
 static bool isCheckAction = false;
-ImuAction action_info;
 /*** Component objects **7*/
 ImuAction *act_info; // 存放mpu6050返回的数据
 
 AppController *app_controller; // APP控制器
-// #define Serial USBSerial
 
 TimerHandle_t xTimerAction = NULL;
 void actionCheckHandle(TimerHandle_t xTimer)
@@ -65,39 +64,20 @@ void setup()
         return;
     }
 
-#ifdef PEAK
-    pinMode(CONFIG_BAT_CHG_DET_PIN, INPUT);
-    pinMode(CONFIG_ENCODER_PUSH_PIN, INPUT_PULLUP);
-    /*电源使能保持*/
-    Serial.println("Power: Waiting...");
-    pinMode(CONFIG_POWER_EN_PIN, OUTPUT);
-    digitalWrite(CONFIG_POWER_EN_PIN, LOW);
-    digitalWrite(CONFIG_POWER_EN_PIN, HIGH);
-    Serial.println("Power: ON");
-    log_e("Power: ON");
-#endif
-
     // config_read(NULL, &g_cfg);   // 旧的配置文件读取方式
     app_controller->read_config(&app_controller->sys_cfg);
     app_controller->read_config(&app_controller->mpu_cfg);
     // app_controller->read_config(&app_controller->rgb_cfg);
-ESP_LOGI(__FUNCTION__, "%s:%d", __FILE__, __LINE__);
-    /*** Init screen ***/
-    screen.init(app_controller->sys_cfg.rotation,
-                app_controller->sys_cfg.backLight);
-ESP_LOGI(__FILE__, "started screen");
-    /*** Init on-board RGB ***/
-    // rgb.init();
-    // rgb.setBrightness(0.05).setRGB(0, 64, 64);
 
-    /*** Init ambient-light sensor ***/
-    // ambLight.init(ONE_TIME_H_RESOLUTION_MODE);
+    /*** Init screen ***/
+    screen.init(3,//app_controller->sys_cfg.rotation,
+                app_controller->sys_cfg.backLight);
 
     /*** Init micro SD-Card ***/
-    // tf.init();
+    tf.init();
     lv_fs_if_init();
 
-    app_controller->init();ESP_LOGI(__FUNCTION__, "%s:%d", __FILE__, __LINE__);
+    app_controller->init();
     // 将APP"安装"到controller里
     app_controller->app_install(&weather_app);
     // app_controller->app_install(&weather_old_app);
@@ -109,7 +89,7 @@ ESP_LOGI(__FILE__, "started screen");
     // app_controller->app_install(&idea_app);
     app_controller->app_install(&bilibili_app);
     app_controller->app_install(&settings_app);
-    // app_controller->app_install(&game_2048_app);
+    app_controller->app_install(&audio_spectrum_app);
     app_controller->app_install(&anniversary_app);
     // app_controller->app_install(&heartbeat_app, APP_TYPE_BACKGROUND);
     
@@ -119,8 +99,6 @@ ESP_LOGI(__FILE__, "started screen");
     mpu.init(app_controller->sys_cfg.mpu_order,
              app_controller->sys_cfg.auto_calibration_mpu,
              &app_controller->mpu_cfg); // 初始化比较耗时
-ESP_LOGI(__FUNCTION__, "%s:%d", __FILE__, __LINE__);
-  
 
     // 定义一个mpu6050的动作检测定时器
     xTimerAction = xTimerCreate("Action Check",
@@ -128,8 +106,6 @@ ESP_LOGI(__FUNCTION__, "%s:%d", __FILE__, __LINE__);
                                 pdTRUE, (void *)0, actionCheckHandle);
     xTimerStart(xTimerAction, 0);
     act_info = mpu.getAction();
-
-    
 }
 
 void loop()
@@ -141,5 +117,4 @@ void loop()
         act_info = mpu.getAction();
     }
     app_controller->main_process(act_info); // 运行当前进程
-    ESP_LOGI("TAG", "run");
 }

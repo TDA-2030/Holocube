@@ -108,6 +108,7 @@ static int picture_init(AppController *sys)
     read_config(&cfg_data);
     // 初始化运行时参数
     run_data = (PictureAppRunData *)malloc(sizeof(PictureAppRunData));
+    ESP_RETURN_ON_FALSE(NULL != run_data, 0, __FUNCTION__, "no mem for weather app");
     run_data->pic_perMillis = 0;
     run_data->image_file = NULL;
     run_data->pfile = NULL;

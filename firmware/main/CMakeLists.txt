@@ -2,10 +2,6 @@
 set(CUBE_DIR "HoloCubic_AIO/HoloCubic_Firmware")
 
 set(LIB_SRC_DIR 
-# ${CUBE_DIR}/lib/Arduino_GFX/src
-# ${CUBE_DIR}/lib/Arduino_GFX/src/canvas
-# ${CUBE_DIR}/lib/Arduino_GFX/src/databus
-# ${CUBE_DIR}/lib/Arduino_GFX/src/display
 ${CUBE_DIR}/lib/Arduino-MPU6050
 ${CUBE_DIR}/lib/ArduinoJson-6.x/src
 ${CUBE_DIR}/lib/ESP32Time
@@ -14,8 +10,6 @@ ${CUBE_DIR}/lib/I2Cdev
 ${CUBE_DIR}/lib/LittleFS/src
 ${CUBE_DIR}/lib/ESP32Time
 ${CUBE_DIR}/lib/pubsubclient/src
-# ${CUBE_DIR}/lib/FastLED
-# ${CUBE_DIR}/lib/TFT_eSPI
 ${CUBE_DIR}/lib/TJpg_Decoder/src
 )
 
@@ -25,7 +19,7 @@ ${CUBE_DIR}/src/app/anniversary
 ${CUBE_DIR}/src/app/bilibili_fans
 ${CUBE_DIR}/src/app/example
 ${CUBE_DIR}/src/app/file_manager
-# ${CUBE_DIR}/src/app/game_2048
+${CUBE_DIR}/src/app/audio_spectrum
 ${CUBE_DIR}/src/app/heartbeat
 ${CUBE_DIR}/src/app/idea_anim
 ${CUBE_DIR}/src/app/media_player

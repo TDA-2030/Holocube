@@ -1,6 +1,9 @@
 #include "wm8978.h"
-#include "bsp_i2c.h"
+#include "driver/i2c.h"
 #include "esp_log.h"
+
+//IIC从机地址
+#define WM8978_Addr 0X1A
 
 /**
  *由于WM8978的IIC接口不支持读取操作，因此寄存器值缓存在内存中当写寄存器时同步更新缓存，
@@ -17,7 +20,6 @@ static uint16_t WM8978_RegCash[] = {
     0x0001, 0x0001
 };
 
-static i2c_bus_handle_t i2c_handle;
 
 uint16_t WM8978_ReadReg(uint8_t RegAddr)
 {
@@ -26,16 +28,21 @@ uint16_t WM8978_ReadReg(uint8_t RegAddr)
 
 uint8_t WM8978_WriteReg(uint8_t RegAddr, uint16_t Value)
 {
+    char buf[2];
+    buf[0] = (RegAddr << 1) | ((Value >> 8) & 0X01);
+    buf[1] = Value & 0XFF;
 
-    uint8_t d[2];
-    d[0] = ((RegAddr << 1) & 0xFE) | ((Value >> 8) & 0x1);
-    d[1] = Value & 0xFF;
-    esp_err_t ret = i2c_bus_write_bytes(i2c_handle, NULL_I2C_MEM_ADDR, 2, d);
-	if (ESP_OK != ret)
-	{
-		ESP_LOGE("TAG", "reg=0x%x, i2c err %d(%s)", RegAddr, ret, esp_err_to_name(ret));
-	}
-	
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (WM8978_Addr << 1) | 0, 1);
+    i2c_master_write(cmd, buf, 2, 1);
+    i2c_master_stop(cmd);
+    esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
+
+    if (ret != ESP_OK) {
+        ESP_LOGE("TAG", "reg[%x], err", RegAddr);
+    }
 
     // //时钟线高电平时拉低数据线，启动IIC传输，然后拉低时钟线
     // vSoftIIC_Start();
@@ -280,7 +287,7 @@ uint8_t WM8978_Init(void)
 {
     uint8_t ucFun_res = 0;
 
-    bsp_i2c_add_device(&i2c_handle, WM8978_Addr);
+    // bsp_i2c_add_device(&i2c_handle, WM8978_Addr);
 
     ucFun_res |= WM8978_WriteReg(0, 0x0000); //向0寄存器写入任意值，就可以软件复位
     //先把声音关到最小，防止噪音

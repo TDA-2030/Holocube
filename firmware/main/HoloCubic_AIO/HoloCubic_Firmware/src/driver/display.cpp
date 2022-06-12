@@ -26,7 +26,7 @@ static TaskHandle_t g_lvgl_task_handle;
 /* Creates a semaphore to handle concurrent call to lvgl stuff
  * If you wish to call *any* lvgl function from other threads/tasks
  * you should lock on the very same semaphore! */
-SemaphoreHandle_t g_guisemaphore;
+static SemaphoreHandle_t g_guisemaphore;
 static esp_lcd_panel_handle_t panel_handle = NULL;
 
 // #define TFT_MISO -1
@@ -165,7 +165,7 @@ static void LCD_ST7789_init(void)
     esp_lcd_panel_io_spi_config_t io_config = {0};
     io_config.dc_gpio_num = TFT_DC;
     io_config.cs_gpio_num = TFT_CS;
-    io_config.pclk_hz = 10 * 1000000;
+    io_config.pclk_hz = 60 * 1000000;
     io_config.spi_mode = 0;
     io_config.trans_queue_depth = 10;
     io_config.lcd_cmd_bits = 8;
@@ -188,6 +188,10 @@ static void LCD_ST7789_init(void)
     esp_lcd_panel_invert_color(panel_handle, 1);
 }
 
+void lcd_draw_bitmap(int32_t x, int32_t y, int32_t w, int32_t h, const uint16_t *data)
+{
+    esp_lcd_panel_draw_bitmap(panel_handle, x, y, x + w, y + h, data);
+}
 
 void Display::setRotation(uint8_t r)
 {
@@ -201,6 +205,7 @@ void Display::setRotation(uint8_t r)
         break;
     case 3:
         esp_lcd_panel_mirror(panel_handle, 0, 1);
+        esp_lcd_panel_set_gap(panel_handle, 0, 80);
         break;
     default: // case 0:
         esp_lcd_panel_mirror(panel_handle, 0, 0);
@@ -242,7 +247,7 @@ void Display::init(uint8_t rotation, uint8_t backLight)
 
     setBackLight(backLight / 100.0);  // 设置亮度
     LCD_ST7789_init();
-    setRotation(0); /* mirror 修改反转，如果加上分光棱镜需要改为4镜像*/
+    setRotation(rotation); /* mirror 修改反转，如果加上分光棱镜需要改为4镜像*/
     fillScreen(0xdd);
 
     lv_init();

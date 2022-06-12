@@ -3,9 +3,6 @@
 
 #include <stdint.h>
 
-//IIC从机地址
-#define WM8978_Addr 0X1A
-
 
 void WM8978_SetVolume(uint8_t Volume);
 uint8_t WM8978_ReadVolume(void);

@@ -316,6 +316,7 @@ static int anniversary_exit_callback(void *param)
         free(run_data);
         run_data = NULL;
     }
+    return 0;
 }
 
 static void anniversary_message_handle(const char *from, const char *to,

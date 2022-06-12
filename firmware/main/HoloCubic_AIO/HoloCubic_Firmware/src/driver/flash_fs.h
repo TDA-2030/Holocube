@@ -1,3 +1,10 @@
+#ifndef __FLASH_FS_H__
+#define __FLASH_FS_H__
+
+#include <stdint.h>
+
+#ifdef __cplusplus
+
 #include <Arduino.h>
 #include "FS.h"
 
@@ -36,4 +43,8 @@ private:
     void testFileIO(const char *path);
 };
 
+#endif
+
 bool analyseParam(char *info, int argc, char **argv);
+
+#endif

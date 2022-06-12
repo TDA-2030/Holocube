@@ -1,5 +1,9 @@
-#ifndef IMU_H
-#define IMU_H
+#ifndef __IMU_MPU6050_H__
+#define __IMU_MPU6050_H__
+
+#include <stdint.h>
+
+#ifdef __cplusplus
 
 #include <I2Cdev.h>
 #include <MPU6050.h>
@@ -84,5 +88,7 @@ public:
     ImuAction *getAction(void); // 获取动作
     void getVirtureMotion6(ImuAction *action_info);
 };
+
+#endif
 
 #endif

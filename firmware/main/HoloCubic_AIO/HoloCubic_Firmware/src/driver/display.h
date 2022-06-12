@@ -50,6 +50,7 @@ private:
 
 #endif
 
+void lcd_draw_bitmap(int32_t x, int32_t y, int32_t w, int32_t h, const uint16_t *data);
 void lv_port_indev_init(void);
 void lvgl_acquire(void);
 void lvgl_release(void);
