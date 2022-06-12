@@ -426,10 +426,11 @@ static void fft_task(void *args)
         last_time = t;
 
         i2s_read(I2S_NUM_0, abuffer, chunk_size, &bytes_read, portMAX_DELAY);
-        int16_t *pcm = (int16_t *)abuffer;printf("[%d, %d, %d, %d, %d, %d]\n", pcm[0],pcm[1],pcm[2],pcm[3],pcm[4],pcm[5]);
+        int16_t *pcm = (int16_t *)abuffer;
         size_t fft_len = 0;
         _fft_data_input_chunk(pcm, bytes_read, wind, y_cf, &fft_len);
         disp_fft(disp_buf, 0, 0, 240, 120, y_cf, fft_len);
+        // vTaskDelay(pdMS_TO_TICKS(500));
     }
 
 exit:

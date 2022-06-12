@@ -89,15 +89,15 @@ esp_err_t bsp_i2s_deinit(i2s_port_t i2s_num)
     return ret_val;
 }
 
-#define EXAMPLE_LCD_PIXEL_CLOCK_HZ     (60 * 1000 * 1000)
+#define EXAMPLE_LCD_PIXEL_CLOCK_HZ     (40 * 1000 * 1000)
 #define EXAMPLE_LCD_BK_LIGHT_ON_LEVEL  0
 #define EXAMPLE_LCD_BK_LIGHT_OFF_LEVEL !EXAMPLE_LCD_BK_LIGHT_ON_LEVEL
-#define EXAMPLE_PIN_NUM_DATA0          48
-#define EXAMPLE_PIN_NUM_PCLK           21
-#define EXAMPLE_PIN_NUM_CS             1
-#define EXAMPLE_PIN_NUM_DC             18
-#define EXAMPLE_PIN_NUM_RST            47
-#define EXAMPLE_PIN_NUM_BK_LIGHT       38
+#define EXAMPLE_PIN_NUM_DATA0          21
+#define EXAMPLE_PIN_NUM_PCLK           18
+#define EXAMPLE_PIN_NUM_CS             47
+#define EXAMPLE_PIN_NUM_DC             48
+#define EXAMPLE_PIN_NUM_RST            -1
+#define EXAMPLE_PIN_NUM_BK_LIGHT       -1
 
 // The pixel number in horizontal and vertical
 #define EXAMPLE_LCD_H_RES              240
@@ -153,8 +153,8 @@ static esp_err_t _spi_1line_lcd_init(void)
     ESP_ERROR_CHECK(esp_lcd_new_panel_st7789(io_handle, &panel_config, &panel_handle));
     ESP_ERROR_CHECK(esp_lcd_panel_reset(panel_handle));
     ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle));
-    // esp_lcd_panel_disp_on_off(panel_handle, 1);
-    // esp_lcd_panel_invert_color(panel_handle, 1);
+    esp_lcd_panel_disp_off(panel_handle, 0);
+    esp_lcd_panel_invert_color(panel_handle, 1);
 
     if (EXAMPLE_PIN_NUM_BK_LIGHT >= 0) {
         gpio_config_t bk_gpio_config = {
