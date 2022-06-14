@@ -8,8 +8,7 @@
 #define AIO_VERSION "2.0.7"
 
 #include "Arduino.h"
-#include "driver/flash_fs.h"
-#include "driver/sd_card.h"
+#include "driver/disk_fs.h"
 #include "driver/display.h"
 #include "driver/imu.h"
 #include "network.h"
@@ -21,10 +20,11 @@
 #define IMU_I2C_SCL 16
 
 extern IMU mpu; // 原则上只提供给主程序调用
-extern SdCard tf;
-// extern Config g_cfg;       // 全局配置文件
+extern Disk_FS tf;
+extern Disk_FS g_flashCfg;
+
 extern Network g_network;  // 网络连接
-extern FlashFS g_flashCfg; // flash中的文件系统（替代原先的Preferences）
+// extern FlashFS g_flashCfg; // flash中的文件系统（替代原先的Preferences）
 extern Display screen;     // 屏幕对象
 
 boolean doDelayMillisTime(unsigned long interval,

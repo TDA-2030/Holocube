@@ -1,10 +1,12 @@
 #include "imu.h"
 #include "common.h"
 
-const char *active_type_info[] = {"TURN_RIGHT", "RETURN",
+static const char *active_type_info[] = {"TURN_RIGHT", "RETURN",
                                   "TURN_LEFT", "UP",
                                   "DOWN", "GO_FORWORD",
                                   "SHAKE", "UNKNOWN"};
+extern int32_t encoder_diff;
+extern lv_indev_state_t encoder_state;
 
 IMU::IMU()
 {
@@ -45,33 +47,32 @@ void IMU::init(uint8_t order, uint8_t auto_calibration,
 
     Serial.print(F("Initialization MPU6050 now, Please don't move.\n"));
     mpu.initialize();
-ESP_LOGI(__FUNCTION__, "%s:%d", __FILE__, __LINE__);
     if (auto_calibration == 0)
-    {ESP_LOGI(__FUNCTION__, "%s:%d", __FILE__, __LINE__);
+    {
         // supply your own gyro offsets here, scaled for min sensitivity
-        mpu.setXGyroOffset(mpu_cfg->x_gyro_offset);ESP_LOGI(__FUNCTION__, "%s:%d", __FILE__, __LINE__);
-        mpu.setYGyroOffset(mpu_cfg->y_gyro_offset);ESP_LOGI(__FUNCTION__, "%s:%d", __FILE__, __LINE__);
-        mpu.setZGyroOffset(mpu_cfg->z_gyro_offset);ESP_LOGI(__FUNCTION__, "%s:%d", __FILE__, __LINE__);
-        mpu.setXAccelOffset(mpu_cfg->x_accel_offset);ESP_LOGI(__FUNCTION__, "%s:%d", __FILE__, __LINE__);
-        mpu.setYAccelOffset(mpu_cfg->y_accel_offset);ESP_LOGI(__FUNCTION__, "%s:%d", __FILE__, __LINE__);
+        mpu.setXGyroOffset(mpu_cfg->x_gyro_offset);
+        mpu.setYGyroOffset(mpu_cfg->y_gyro_offset);
+        mpu.setZGyroOffset(mpu_cfg->z_gyro_offset);
+        mpu.setXAccelOffset(mpu_cfg->x_accel_offset);
+        mpu.setYAccelOffset(mpu_cfg->y_accel_offset);
         mpu.setZAccelOffset(mpu_cfg->z_accel_offset); // 1688 factory default for my test chip
     }
     else
-    {ESP_LOGI(__FUNCTION__, "%s:%d", __FILE__, __LINE__);
+    {
         // 启动自动校准
         // 7次循环自动校正
-        mpu.CalibrateAccel(7);ESP_LOGI(__FUNCTION__, "%s:%d", __FILE__, __LINE__);
-        mpu.CalibrateGyro(7);ESP_LOGI(__FUNCTION__, "%s:%d", __FILE__, __LINE__);
-        mpu.PrintActiveOffsets();ESP_LOGI(__FUNCTION__, "%s:%d", __FILE__, __LINE__);
+        mpu.CalibrateAccel(7);
+        mpu.CalibrateGyro(7);
+        mpu.PrintActiveOffsets();
 
-        mpu_cfg->x_gyro_offset = mpu.getXGyroOffset();ESP_LOGI(__FUNCTION__, "%s:%d", __FILE__, __LINE__);
+        mpu_cfg->x_gyro_offset = mpu.getXGyroOffset();
         mpu_cfg->y_gyro_offset = mpu.getYGyroOffset();
         mpu_cfg->z_gyro_offset = mpu.getZGyroOffset();
         mpu_cfg->x_accel_offset = mpu.getXAccelOffset();
         mpu_cfg->y_accel_offset = mpu.getYAccelOffset();
-        mpu_cfg->z_accel_offset = mpu.getZAccelOffset();ESP_LOGI(__FUNCTION__, "%s:%d", __FILE__, __LINE__);
+        mpu_cfg->z_accel_offset = mpu.getZAccelOffset();
     }
-ESP_LOGI(__FUNCTION__, "%s:%d", __FILE__, __LINE__);
+
     Serial.print(F("Initialization MPU6050 success.\n"));
 }
 
@@ -80,13 +81,9 @@ void IMU::setOrder(uint8_t order) // 设置方向
     this->order = order; // 表示方位
 }
 
-bool IMU::Encoder_GetIsPush(void)
+const char*IMU::getActionname(ACTIVE_TYPE active)
 {
-#ifdef PEAK
-    return (digitalRead(CONFIG_ENCODER_PUSH_PIN) == LOW);
-#else
-    return false;
-#endif
+    return active_type_info[active];
 }
 
 ImuAction *IMU::update(int interval)

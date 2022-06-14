@@ -48,7 +48,7 @@ void app_control_gui_release(void)
     }
 }
 
-void display_app_scr_init(const void *src_img_path, const char *app_name)
+static void display_app_scr_init(const void *src_img_path, const char *app_name)
 {
     lv_obj_t *act_obj = lv_scr_act(); // 获取当前活动页
     if (act_obj == app_scr)

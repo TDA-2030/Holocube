@@ -201,7 +201,7 @@ static int picture_exit_callback(void *param)
 {
     photo_gui_del();
     // 释放文件名链表
-    release_file_info(run_data->image_file);
+    tf.release_file_info(run_data->image_file);
     // 恢复此前的驱动参数
     screen.setSwapBytes(run_data->tftSwapStatus);
 

@@ -2,7 +2,6 @@
 #include "media_gui.h"
 #include "sys/app_controller.h"
 #include "common.h"
-#include "driver/sd_card.h"
 #include "docoder.h"
 #include "DMADrawer.h"
 
@@ -282,7 +281,7 @@ static int media_player_exit_callback(void *param)
 
     run_data->file.close(); // 退出时关闭文件
     // 释放文件循环队列
-    release_file_info(run_data->movie_file);
+    tf.release_file_info(run_data->movie_file);
 
     // 释放运行数据
     if (NULL != run_data)

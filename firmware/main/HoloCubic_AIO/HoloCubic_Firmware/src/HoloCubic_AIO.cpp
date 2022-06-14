@@ -26,13 +26,12 @@
 #include "app/anniversary/anniversary.h"
 #include "app/audio_spectrum/audio_spectrum.h"
 
-#include <SPIFFS.h>
 #include <esp32-hal.h>
 #include <esp32-hal-timer.h>
 
 static bool isCheckAction = false;
-/*** Component objects **7*/
-ImuAction *act_info; // 存放mpu6050返回的数据
+
+static ImuAction *act_info; // 存放mpu6050返回的数据
 
 AppController *app_controller; // APP控制器
 
@@ -41,6 +40,51 @@ void actionCheckHandle(TimerHandle_t xTimer)
 {
     // 标志需要检测动作
     isCheckAction = true;
+}
+
+static void memdisk_init(void)
+{
+    if (!SPIFFS.begin(true))
+    {
+        Serial.println("SPIFFS Mount Failed");
+        return;
+    }
+
+    SPIClass *sd_spi = new SPIClass(HSPI); // another SPI
+    sd_spi->begin(2, 3, 4, 5);         // Replace default HSPI pins
+    if (!SD.begin(5, *sd_spi, 80000000))  // SD-Card SS pin is 15
+    {
+        Serial.println("Card Mount Failed");
+        return;
+    }
+    uint8_t cardType = SD.cardType();
+
+    if (cardType == CARD_NONE)
+    {
+        Serial.println("No SD card attached");
+        return;
+    }
+
+    Serial.print("SD Card Type: ");
+    if (cardType == CARD_MMC)
+    {
+        Serial.println("MMC");
+    }
+    else if (cardType == CARD_SD)
+    {
+        Serial.println("SDSC");
+    }
+    else if (cardType == CARD_SDHC)
+    {
+        Serial.println("SDHC");
+    }
+    else
+    {
+        Serial.println("UNKNOWN");
+    }
+
+    uint64_t cardSize = SD.cardSize() / (1024 * 1024);
+    Serial.printf("SD Card Size: %lluMB\n", cardSize);
 }
 
 void setup()
@@ -54,12 +98,7 @@ void setup()
 
     app_controller = new AppController(); // APP控制器
 
-    // 需要放在Setup里初始化
-    if (!SPIFFS.begin(true))
-    {
-        Serial.println("SPIFFS Mount Failed");
-        return;
-    }
+    memdisk_init();
 
     // config_read(NULL, &g_cfg);   // 旧的配置文件读取方式
     app_controller->read_config(&app_controller->sys_cfg);
@@ -71,7 +110,6 @@ void setup()
                 app_controller->sys_cfg.backLight);
 
     /*** Init micro SD-Card ***/
-    tf.init();
     lv_fs_if_init();
 
     app_controller->init();

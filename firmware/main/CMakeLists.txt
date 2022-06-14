@@ -7,7 +7,6 @@ ${CUBE_DIR}/lib/ArduinoJson-6.x/src
 ${CUBE_DIR}/lib/ESP32Time
 ${CUBE_DIR}/lib/font
 ${CUBE_DIR}/lib/I2Cdev
-${CUBE_DIR}/lib/LittleFS/src
 ${CUBE_DIR}/lib/ESP32Time
 ${CUBE_DIR}/lib/pubsubclient/src
 ${CUBE_DIR}/lib/TJpg_Decoder/src

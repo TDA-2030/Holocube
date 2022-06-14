@@ -6,54 +6,48 @@
 #ifdef __cplusplus
 
 #include "FS.h"
-#include "SD.h"
+#include "SPIFFS.h"
 #include "SPI.h"
+#include "SD.h"
 
 #define DIR_FILE_NUM 10
 #define DIR_FILE_NAME_MAX_LEN 20
 #define FILENAME_MAX_LEN 100
 
-extern int photo_file_num;
-extern char file_name_list[DIR_FILE_NUM][DIR_FILE_NAME_MAX_LEN];
-
-enum FILE_TYPE : unsigned char
-{
+enum FILE_TYPE : unsigned char {
     FILE_TYPE_UNKNOW = 0,
     FILE_TYPE_FILE,
     FILE_TYPE_FOLDER
 };
 
-struct File_Info
-{
+struct File_Info {
     char *file_name;
     FILE_TYPE file_type;
     File_Info *front_node; // 上一个节点
     File_Info *next_node;  // 下一个节点
 };
 
-void release_file_info(File_Info *info);
-
-void join_path(char *dst_path, const char *pre_path, const char *rear_path);
-
-static const char *get_file_basename(const char *path);
-
-class SdCard
-{
-private:
-    char buf[128];
+class Disk_FS {
 
 public:
-    void init();
+    Disk_FS(fs::FS &fs);
+    ~Disk_FS();
+
+    const char *get_file_basename(const char *path);
 
     void listDir(const char *dirname, uint8_t levels);
 
     File_Info *listDir(const char *dirname);
+
+    void release_file_info(File_Info *info);
 
     void createDir(const char *path);
 
     void removeDir(const char *path);
 
     void readFile(const char *path);
+
+    uint16_t readFile(const char *path, uint8_t *info);
 
     String readFileLine(const char *path, int num);
 
@@ -74,6 +68,11 @@ public:
     void writeBinToSd(const char *path, uint8_t *buf);
 
     void fileIO(const char *path);
+private:
+    int photo_file_num = 0;
+    char file_name_list[DIR_FILE_NUM][DIR_FILE_NAME_MAX_LEN];
+    char buf[128];
+    fs::FS &m_fs;
 };
 
 #endif

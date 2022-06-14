@@ -33,6 +33,8 @@ struct EVENT_OBJ
     unsigned long nextRunTime; // 下次运行的时间戳
 };
 
+bool analyseParam(char *info, int argc, char **argv);
+
 class AppController
 {
 public:

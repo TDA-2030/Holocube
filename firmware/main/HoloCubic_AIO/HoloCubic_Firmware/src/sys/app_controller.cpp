@@ -13,6 +13,8 @@ const char *app_event_type_info[] = {"APP_MESSAGE_WIFI_CONN", "APP_MESSAGE_WIFI_
 
 volatile static bool isRunEventDeal = false;
 
+LV_IMG_DECLARE(app_loading);
+
 void eventDealHandle(TimerHandle_t xTimer)
 {
     isRunEventDeal = true;
@@ -117,7 +119,7 @@ int AppController::app_uninstall(const APP_OBJ *app)
 int AppController::main_process(ImuAction *act_info)
 {
 
-    printf("[Operate]\tact_info->active: %s\n", active_type_info[act_info->active]);
+    printf("[Operate]\tact_info->active: %s\n", mpu.getActionname(act_info->active));
     
 
     if (isRunEventDeal)

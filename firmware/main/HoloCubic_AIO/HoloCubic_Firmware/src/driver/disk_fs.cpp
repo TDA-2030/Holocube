@@ -1,50 +1,24 @@
-#include "sd_card.h"
+
 #include <string.h>
+#include "disk_fs.h"
 
-int photo_file_num = 0;
-char file_name_list[DIR_FILE_NUM][DIR_FILE_NAME_MAX_LEN];
 
-void release_file_info(File_Info *info)
+static void join_path(char *dst_path, const char *pre_path, const char *rear_path)
 {
-    File_Info *cur_node = NULL; // 记录当前节点
-    if (NULL == info)
-    {
-        return;
-    }
-    for (cur_node = info->next_node; NULL != cur_node;)
-    {
-        // 判断是不是循环一圈回来了
-        if (info->next_node == cur_node)
-        {
-            break;
-        }
-        File_Info *tmp = cur_node; // 保存准备删除的节点
-        cur_node = cur_node->next_node;
-        free(tmp);
-    }
-    free(info);
-}
-
-void join_path(char *dst_path, const char *pre_path, const char *rear_path)
-{
-    while (*pre_path != 0)
-    {
+    while (*pre_path != 0) {
         *dst_path = *pre_path;
         ++dst_path;
         ++pre_path;
     }
-    if (*(pre_path - 1) != '/')
-    {
+    if (*(pre_path - 1) != '/') {
         *dst_path = '/';
         ++dst_path;
     }
 
-    if (*rear_path == '/')
-    {
+    if (*rear_path == '/') {
         ++rear_path;
     }
-    while (*rear_path != 0)
-    {
+    while (*rear_path != 0) {
         *dst_path = *rear_path;
         ++dst_path;
         ++rear_path;
@@ -52,76 +26,39 @@ void join_path(char *dst_path, const char *pre_path, const char *rear_path)
     *dst_path = 0;
 }
 
-/*
- * get file basename
- */
-static const char *get_file_basename(const char *path)
+Disk_FS::Disk_FS(fs::FS &fs): m_fs(fs)
+{
+
+}
+
+Disk_FS::~Disk_FS()
+{
+
+}
+
+const char *Disk_FS::get_file_basename(const char *path)
 {
     // 获取最后一个'/'所在的下标
     const char *ret = path;
-    for (const char *cur = path; *cur != 0; ++cur)
-    {
-        if (*cur == '/')
-        {
+    for (const char *cur = path; *cur != 0; ++cur) {
+        if (*cur == '/') {
             ret = cur + 1;
         }
     }
     return ret;
 }
 
-void SdCard::init()
-{
-
-    SPIClass *sd_spi = new SPIClass(HSPI); // another SPI
-    sd_spi->begin(2, 3, 4, 5);         // Replace default HSPI pins
-    if (!SD.begin(5, *sd_spi, 80000000))  // SD-Card SS pin is 15
-    {
-        Serial.println("Card Mount Failed");
-        return;
-    }
-    uint8_t cardType = SD.cardType();
-
-    if (cardType == CARD_NONE)
-    {
-        Serial.println("No SD card attached");
-        return;
-    }
-
-    Serial.print("SD Card Type: ");
-    if (cardType == CARD_MMC)
-    {
-        Serial.println("MMC");
-    }
-    else if (cardType == CARD_SD)
-    {
-        Serial.println("SDSC");
-    }
-    else if (cardType == CARD_SDHC)
-    {
-        Serial.println("SDHC");
-    }
-    else
-    {
-        Serial.println("UNKNOWN");
-    }
-
-    uint64_t cardSize = SD.cardSize() / (1024 * 1024);
-    Serial.printf("SD Card Size: %lluMB\n", cardSize);
-}
-
-void SdCard::listDir(const char *dirname, uint8_t levels)
+void Disk_FS::listDir(const char *dirname, uint8_t levels)
 {
     Serial.printf("Listing directory: %s\n", dirname);
     photo_file_num = 0;
 
-    File root = SD.open(dirname);
-    if (!root)
-    {
+    File root = m_fs.open(dirname);
+    if (!root) {
         Serial.println("Failed to open directory");
         return;
     }
-    if (!root.isDirectory())
-    {
+    if (!root.isDirectory()) {
         Serial.println("Not a directory");
         return;
     }
@@ -129,19 +66,14 @@ void SdCard::listDir(const char *dirname, uint8_t levels)
     int dir_len = strlen(dirname) + 1;
 
     File file = root.openNextFile();
-    while (file && photo_file_num < DIR_FILE_NUM)
-    {
-        if (file.isDirectory())
-        {
+    while (file && photo_file_num < DIR_FILE_NUM) {
+        if (file.isDirectory()) {
             Serial.print("  DIR : ");
             Serial.println(file.name());
-            if (levels)
-            {
+            if (levels) {
                 listDir(file.name(), levels - 1);
             }
-        }
-        else
-        {
+        } else {
             Serial.print("  FILE: ");
             // 只取文件名 保存到file_name_list中
             strncpy(file_name_list[photo_file_num], file.name() + dir_len, DIR_FILE_NAME_MAX_LEN - 1);
@@ -159,18 +91,16 @@ void SdCard::listDir(const char *dirname, uint8_t levels)
     Serial.println(photo_file_num);
 }
 
-File_Info *SdCard::listDir(const char *dirname)
+File_Info *Disk_FS::listDir(const char *dirname)
 {
     Serial.printf("Listing directory: %s\n", dirname);
 
-    File root = SD.open(dirname);
-    if (!root)
-    {
+    File root = m_fs.open(dirname);
+    if (!root) {
         Serial.println("Failed to open directory");
         return NULL;
     }
-    if (!root.isDirectory())
-    {
+    if (!root.isDirectory()) {
         Serial.println("Not a directory");
         return NULL;
     }
@@ -190,8 +120,7 @@ File_Info *SdCard::listDir(const char *dirname)
     File_Info *file_node = head_file;
 
     File file = root.openNextFile();
-    while (file)
-    {
+    while (file) {
         // if (levels)
         // {
         //     listDir(file.name(), levels - 1);
@@ -199,8 +128,7 @@ File_Info *SdCard::listDir(const char *dirname)
         const char *fn = get_file_basename(file.name());
         // 字符数组长度为实际字符串长度+1
         int filename_len = strlen(fn);
-        if (filename_len > FILENAME_MAX_LEN - 10)
-        {
+        if (filename_len > FILENAME_MAX_LEN - 10) {
             Serial.println("Filename is too long.");
         }
 
@@ -222,15 +150,12 @@ File_Info *SdCard::listDir(const char *dirname)
         char tmp_file_name[FILENAME_MAX_LEN] = {0};
         // sprintf(tmp_file_name, "%s/%s", dirname, file_node->file_name);
         join_path(tmp_file_name, dirname, file_node->file_name);
-        if (file.isDirectory())
-        {
+        if (file.isDirectory()) {
             file_node->file_type = FILE_TYPE_FOLDER;
             // 类型为文件夹
             Serial.print("  DIR : ");
             Serial.println(tmp_file_name);
-        }
-        else
-        {
+        } else {
             file_node->file_type = FILE_TYPE_FILE;
             // 类型为文件
             Serial.print("  FILE: ");
@@ -242,8 +167,7 @@ File_Info *SdCard::listDir(const char *dirname)
         file = root.openNextFile();
     }
 
-    if (NULL != head_file->next_node)
-    {
+    if (NULL != head_file->next_node) {
         // 将最后一个节点的next_node指针指向 head_file->next_node
         file_node->next_node = head_file->next_node;
         // 调整第一个数据节点的front_node指针（非head节点）
@@ -252,78 +176,102 @@ File_Info *SdCard::listDir(const char *dirname)
     return head_file;
 }
 
-void SdCard::createDir(const char *path)
+void Disk_FS::release_file_info(File_Info *info)
+{
+    File_Info *cur_node = NULL; // 记录当前节点
+    if (NULL == info) {
+        return;
+    }
+    for (cur_node = info->next_node; NULL != cur_node;) {
+        // 判断是不是循环一圈回来了
+        if (info->next_node == cur_node) {
+            break;
+        }
+        File_Info *tmp = cur_node; // 保存准备删除的节点
+        cur_node = cur_node->next_node;
+        free(tmp);
+    }
+    free(info);
+}
+
+void Disk_FS::createDir(const char *path)
 {
     Serial.printf("Creating Dir: %s\n", path);
-    if (SD.mkdir(path))
-    {
+    if (m_fs.mkdir(path)) {
         Serial.println("Dir created");
-    }
-    else
-    {
+    } else {
         Serial.println("mkdir failed");
     }
 }
 
-void SdCard::removeDir(const char *path)
+void Disk_FS::removeDir(const char *path)
 {
     Serial.printf("Removing Dir: %s\n", path);
-    if (SD.rmdir(path))
-    {
+    if (m_fs.rmdir(path)) {
         Serial.println("Dir removed");
-    }
-    else
-    {
+    } else {
         Serial.println("rmdir failed");
     }
 }
 
-void SdCard::readFile(const char *path)
+void Disk_FS::readFile(const char *path)
 {
     Serial.printf("Reading file: %s\n", path);
 
-    File file = SD.open(path);
-    if (!file)
-    {
+    File file = m_fs.open(path);
+    if (!file) {
         Serial.println("Failed to open file for reading");
         return;
     }
 
     Serial.print("Read from file: ");
-    while (file.available())
-    {
+    while (file.available()) {
         Serial.write(file.read());
     }
     file.close();
 }
 
-String SdCard::readFileLine(const char *path, int num)
+uint16_t Disk_FS::readFile(const char *path, uint8_t *info)
+{
+    Serial.printf("Reading file: %s\r\n", path);
+
+    File file = m_fs.open(path);
+    uint16_t ret_len = 0;
+    if (!file || file.isDirectory()) {
+        Serial.println("- failed to open file for reading");
+        return ret_len;
+    }
+
+    // Serial.println("- read from file:");
+    while (file.available()) {
+        ret_len += file.read(info + ret_len, 15);
+        // Serial.write(file.read());
+    }
+    file.close();
+    return ret_len;
+}
+
+String Disk_FS::readFileLine(const char *path, int num)
 {
     Serial.printf("Reading file: %s line: %d\n", path, num);
 
-    File file = SD.open(path);
-    if (!file)
-    {
+    File file = m_fs.open(path);
+    if (!file) {
         return ("Failed to open file for reading");
     }
 
     char *p = buf;
-    while (file.available())
-    {
+    while (file.available()) {
         char c = file.read();
-        if (c == '\n')
-        {
+        if (c == '\n') {
             num--;
-            if (num == 0)
-            {
+            if (num == 0) {
                 *(p++) = '\0';
                 String s(buf);
                 s.trim();
                 return s;
             }
-        }
-        else if (num == 1)
-        {
+        } else if (num == 1) {
             *(p++) = c;
         }
     }
@@ -332,109 +280,89 @@ String SdCard::readFileLine(const char *path, int num)
     return String("error parameter!");
 }
 
-void SdCard::writeFile(const char *path, const char *info)
+void Disk_FS::writeFile(const char *path, const char *info)
 {
     Serial.printf("Writing file: %s\n", path);
 
-    File file = SD.open(path, FILE_WRITE);
-    if (!file)
-    {
+    File file = m_fs.open(path, FILE_WRITE);
+    if (!file) {
         Serial.println("Failed to open file for writing");
         return;
     }
-    if (file.println(info))
-    {
+    if (file.println(info)) {
         Serial.println("Write succ");
-    }
-    else
-    {
+    } else {
         Serial.println("Write failed");
     }
     file.close();
 }
 
-File SdCard::open(const String &path, const char *mode)
+File Disk_FS::open(const String &path, const char *mode)
 {
-    return SD.open(path, FILE_WRITE);
+    return m_fs.open(path, FILE_WRITE);
 }
 
-void SdCard::appendFile(const char *path, const char *message)
+void Disk_FS::appendFile(const char *path, const char *message)
 {
     Serial.printf("Appending to file: %s\n", path);
 
-    File file = SD.open(path, FILE_APPEND);
-    if (!file)
-    {
+    File file = m_fs.open(path, FILE_APPEND);
+    if (!file) {
         Serial.println("Failed to open file for appending");
         return;
     }
-    if (file.print(message))
-    {
+    if (file.print(message)) {
         Serial.println("Message appended");
-    }
-    else
-    {
+    } else {
         Serial.println("Append failed");
     }
     file.close();
 }
 
-void SdCard::renameFile(const char *path1, const char *path2)
+void Disk_FS::renameFile(const char *path1, const char *path2)
 {
     Serial.printf("Renaming file %s to %s\n", path1, path2);
-    if (SD.rename(path1, path2))
-    {
+    if (m_fs.rename(path1, path2)) {
         Serial.println("File renamed");
-    }
-    else
-    {
+    } else {
         Serial.println("Rename failed");
     }
 }
 
-boolean SdCard::deleteFile(const char *path)
+boolean Disk_FS::deleteFile(const char *path)
 {
     Serial.printf("Deleting file: %s\n", path);
-    if (SD.remove(path))
-    {
+    if (m_fs.remove(path)) {
         Serial.println("File deleted");
         return true;
-    }
-    else
-    {
+    } else {
         Serial.println("Delete failed");
     }
     return false;
 }
 
-boolean SdCard::deleteFile(const String &path)
+boolean Disk_FS::deleteFile(const String &path)
 {
     Serial.printf("Deleting file: %s\n", path);
-    if (SD.remove(path))
-    {
+    if (m_fs.remove(path)) {
         Serial.println("File deleted");
         return true;
-    }
-    else
-    {
+    } else {
         Serial.println("Delete failed");
     }
     return false;
 }
 
-void SdCard::readBinFromSd(const char *path, uint8_t *buf)
+void Disk_FS::readBinFromSd(const char *path, uint8_t *buf)
 {
-    File file = SD.open(path);
+    File file = m_fs.open(path);
     size_t len = 0;
-    if (file)
-    {
+    if (file) {
         len = file.size();
 
-        while (len)
-        {
+        while (len) {
             size_t toRead = len;
-            if (toRead > 512)
-            {
+            if (toRead > 512) {
                 toRead = 512;
             }
             file.read(buf, toRead);
@@ -442,47 +370,40 @@ void SdCard::readBinFromSd(const char *path, uint8_t *buf)
         }
 
         file.close();
-    }
-    else
-    {
+    } else {
         Serial.println("Failed to open file for reading");
     }
 }
 
-void SdCard::writeBinToSd(const char *path, uint8_t *buf)
+void Disk_FS::writeBinToSd(const char *path, uint8_t *buf)
 {
-    File file = SD.open(path, FILE_WRITE);
-    if (!file)
-    {
+    File file = m_fs.open(path, FILE_WRITE);
+    if (!file) {
         Serial.println("Failed to open file for writing");
         return;
     }
 
     size_t i;
-    for (i = 0; i < 2048; i++)
-    {
+    for (i = 0; i < 2048; i++) {
         file.write(buf, 512);
     }
     file.close();
 }
 
-void SdCard::fileIO(const char *path)
+void Disk_FS::fileIO(const char *path)
 {
-    File file = SD.open(path);
+    File file = m_fs.open(path);
     static uint8_t buf[512];
     size_t len = 0;
     uint32_t start = millis();
     uint32_t end = start;
-    if (file)
-    {
+    if (file) {
         len = file.size();
         size_t flen = len;
         start = millis();
-        while (len)
-        {
+        while (len) {
             size_t toRead = len;
-            if (toRead > 512)
-            {
+            if (toRead > 512) {
                 toRead = 512;
             }
             file.read(buf, toRead);
@@ -491,23 +412,19 @@ void SdCard::fileIO(const char *path)
         end = millis() - start;
         Serial.printf("%u bytes read for %u ms\n", flen, end);
         file.close();
-    }
-    else
-    {
+    } else {
         Serial.println("Failed to open file for reading");
     }
 
-    file = SD.open(path, FILE_WRITE);
-    if (!file)
-    {
+    file = m_fs.open(path, FILE_WRITE);
+    if (!file) {
         Serial.println("Failed to open file for writing");
         return;
     }
 
     size_t i;
     start = millis();
-    for (i = 0; i < 2048; i++)
-    {
+    for (i = 0; i < 2048; i++) {
         file.write(buf, 512);
     }
     end = millis() - start;

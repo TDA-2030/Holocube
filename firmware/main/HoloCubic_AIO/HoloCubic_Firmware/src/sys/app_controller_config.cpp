@@ -7,6 +7,20 @@
 #define MPU_CONFIG_PATH "/mpu.cfg"
 #define RGB_CONFIG_PATH "/rgb.cfg"
 
+bool analyseParam(char *info, int argc, char **argv)
+{
+    int cnt; // 记录解析到第几个参数
+    for (cnt = 0; cnt < argc; ++cnt) {
+        argv[cnt] = info;
+        while (*info != '\n') {
+            ++info;
+        }
+        *info = 0;
+        ++info;
+    }
+    return true;
+}
+
 void AppController::read_config(SysUtilConfig *cfg)
 {
     // 如果有需要持久化配置文件 可以调用此函数将数据存在flash中
