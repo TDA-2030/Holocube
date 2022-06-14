@@ -38,10 +38,10 @@ void file_maneger_gui_init(void)
 void display_file_manager_init(void)
 {
     lv_obj_t *act_obj = lv_scr_act(); // 获取当前活动页
-    if (act_obj == file_manager_scr)
+    if (act_obj == file_manager_scr) {
         return;
-    if (NULL != local_ip_label)
-    {
+    }
+    if (NULL != local_ip_label) {
         lv_obj_clean(local_ip_label);
         lv_obj_clean(ap_ip_label);
         lv_obj_clean(domain_label);
@@ -83,8 +83,7 @@ void display_file_manager(const char *title, const char *domain,
 void file_manager_gui_del(void)
 {
 
-    if (NULL != local_ip_label)
-    {
+    if (NULL != local_ip_label) {
         lv_obj_clean(local_ip_label);
         lv_obj_clean(ap_ip_label);
         lv_obj_clean(domain_label);
@@ -95,8 +94,7 @@ void file_manager_gui_del(void)
         title_label = NULL;
     }
 
-    if (NULL != file_manager_scr)
-    {
+    if (NULL != file_manager_scr) {
         lv_obj_clean(file_manager_scr); // 清空此前页面
         file_manager_scr = NULL;
     }

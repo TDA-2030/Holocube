@@ -165,7 +165,7 @@ static void LCD_ST7789_init(void)
     esp_lcd_panel_io_spi_config_t io_config = {0};
     io_config.dc_gpio_num = TFT_DC;
     io_config.cs_gpio_num = TFT_CS;
-    io_config.pclk_hz = 60 * 1000000;
+    io_config.pclk_hz = 40 * 1000000;
     io_config.spi_mode = 0;
     io_config.trans_queue_depth = 10;
     io_config.lcd_cmd_bits = 8;

@@ -14,6 +14,7 @@ struct SettingsAppRunData
 };
 
 static SettingsAppRunData *run_data = NULL;
+LV_IMG_DECLARE(app_settings);
 
 int exec_order(int len, const uint8_t *data)
 {

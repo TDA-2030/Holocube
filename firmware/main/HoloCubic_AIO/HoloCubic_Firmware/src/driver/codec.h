@@ -13,6 +13,7 @@ extern "C" {
 #endif
 
 void codec_init(void);
+void codec_deinit(void);
 
 #ifdef __cplusplus
 }

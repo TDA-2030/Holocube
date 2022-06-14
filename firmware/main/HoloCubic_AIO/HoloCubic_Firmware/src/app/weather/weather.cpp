@@ -18,6 +18,8 @@
 #define UPDATE_DALIY_WEATHER 0x02 // 更新每天天气
 #define UPDATE_TIME 0x04          // 更新时间
 
+LV_IMG_DECLARE(app_weather);
+
 // 天气的持久化配置
 #define WEATHER_CONFIG_PATH "/weather.cfg"
 struct WT_Config {

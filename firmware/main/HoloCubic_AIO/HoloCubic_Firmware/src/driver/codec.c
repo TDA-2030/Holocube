@@ -52,15 +52,12 @@ static esp_err_t bsp_i2s_init(i2s_port_t i2s_num, uint32_t sample_rate)
     return ret_val;
 }
 
-
 void codec_init(void)
 {
     bsp_i2s_init(I2S_NUM_0, 16000);
     vTaskDelay(pdMS_TO_TICKS(500));
 
-    WM8978_Init();
-// WM8978_PlayMode();
-    WM8978_RecoMode();
+    WM8978_begin();
 
 // WM8978_HPvol_Set(32, 32);
 // WM8978_SPKvol_Set(40);
@@ -76,10 +73,13 @@ void codec_init(void)
 
 }
 
+void codec_deinit(void)
+{
+    esp_err_t ret_val = ESP_OK;
 
+    WM8978_cfgADDA(0, 0);
+    ret_val |= i2s_stop(I2S_NUM_0);
+    ret_val |= i2s_driver_uninstall(I2S_NUM_0);
 
-
-
-
-
-
+    return ret_val;
+}

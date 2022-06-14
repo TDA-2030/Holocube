@@ -15,6 +15,7 @@
 #define SERVER_PORT 8081         //设置监听端口
 #define SHARE_WIFI_ALIVE 20000UL // 维持wifi心跳的时间（20s）
 
+LV_IMG_DECLARE(app_file_manager);
 FtpServer ftpSrv; // 定义FTP服务端
 
 struct FileManagerAppRunData

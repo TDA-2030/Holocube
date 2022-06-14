@@ -15,6 +15,8 @@ struct PIC_Config
     unsigned long switchInterval; // 自动播放下一张的时间间隔 ms
 };
 
+LV_IMG_DECLARE(app_picture);
+
 static void write_config(PIC_Config *cfg)
 {
     char tmp[16];

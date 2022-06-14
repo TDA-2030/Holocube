@@ -27,8 +27,7 @@ static lv_obj_t *imgbtn1;
 
 void bilibili_gui_init(void)
 {
-    if(NULL == default_style.map)
-    {
+    if (NULL == default_style.map) {
 
     }
     lv_style_init(&default_style);
@@ -51,8 +50,9 @@ void bilibili_gui_init(void)
 void display_bilibili_init(void)
 {
     lv_obj_t *act_obj = lv_scr_act(); // 获取当前活动页
-    if (act_obj == bilibili_gui)
+    if (act_obj == bilibili_gui) {
         return;
+    }
 
     bilibili_obj_del();    // 清空对象
     lv_obj_clean(act_obj); // 清空此前页面
@@ -108,8 +108,7 @@ void display_bilibili(const char *file_name, lv_scr_load_anim_t anim_type,
 
 void bilibili_obj_del(void)
 {
-    if (NULL != fans_label)
-    {
+    if (NULL != fans_label) {
         lv_obj_clean(fans_label);
         lv_obj_clean(follow_label);
         lv_obj_clean(logo_image);
@@ -124,8 +123,7 @@ void bilibili_obj_del(void)
 void bilibili_gui_del(void)
 {
     bilibili_obj_del();
-    if (NULL != bilibili_gui)
-    {
+    if (NULL != bilibili_gui) {
         lv_obj_clean(bilibili_gui);
         bilibili_gui = NULL;
     }

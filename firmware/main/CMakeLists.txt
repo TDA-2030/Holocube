@@ -17,18 +17,14 @@ set(APP_SRC_DIR
 ${CUBE_DIR}/src
 ${CUBE_DIR}/src/app/anniversary
 ${CUBE_DIR}/src/app/bilibili_fans
-${CUBE_DIR}/src/app/example
 ${CUBE_DIR}/src/app/file_manager
 ${CUBE_DIR}/src/app/audio_spectrum
-${CUBE_DIR}/src/app/heartbeat
-${CUBE_DIR}/src/app/idea_anim
 ${CUBE_DIR}/src/app/media_player
 ${CUBE_DIR}/src/app/picture
 ${CUBE_DIR}/src/app/screen_share
 ${CUBE_DIR}/src/app/server
 ${CUBE_DIR}/src/app/settings
 ${CUBE_DIR}/src/app/weather
-${CUBE_DIR}/src/app/weather_old
 ${CUBE_DIR}/src/driver
 ${CUBE_DIR}/src/sys
 

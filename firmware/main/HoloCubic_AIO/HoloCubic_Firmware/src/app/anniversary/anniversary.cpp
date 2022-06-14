@@ -8,6 +8,8 @@
 #define MAX_ANNIVERSARY_CNT 2
 #define TIME_API "http://api.m.taobao.com/rest/api3.do?api=mtop.common.gettimestamp"
 
+LV_IMG_DECLARE(app_anniversary);
+
 bool tmfromString(const char *date_str, struct tm *date);
 
 // 纪念日的持久化配置

@@ -5,6 +5,8 @@
 
 #define EXAMPLE_APP_NAME "Example"
 
+LV_IMG_DECLARE(app_example);
+
 // 动态数据，APP的生命周期结束也需要释放它
 struct ExampleAppRunData
 {

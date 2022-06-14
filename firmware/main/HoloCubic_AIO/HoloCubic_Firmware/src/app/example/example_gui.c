@@ -9,7 +9,7 @@ static lv_style_t default_style;
 static lv_style_t label_style;
 
 void example_gui_init(void)
-{ 
+{
     lv_style_init(&default_style);
 }
 
@@ -23,12 +23,11 @@ void display_example(const char *file_name, lv_scr_load_anim_t anim_type)
 
 void example_gui_del(void)
 {
-    if (NULL != example_gui)
-    {
+    if (NULL != example_gui) {
         lv_obj_clean(example_gui);
         example_gui = NULL;
     }
-    
+
     // 手动清除样式，防止内存泄漏
     // lv_style_reset(&default_style);
 }

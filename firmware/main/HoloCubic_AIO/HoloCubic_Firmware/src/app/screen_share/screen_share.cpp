@@ -14,6 +14,7 @@
 #define HTTP_PORT 8081 //设置监听端口
 WiFiServer ss_server;  //服务端 ss = screen_share
 WiFiClient ss_client;  // 客户端 ss = screen_share
+LV_IMG_DECLARE(app_screen);
 
 // 天气的持久化配置
 #define SCREEN_SHARE_CONFIG_PATH "/screen_share.cfg"

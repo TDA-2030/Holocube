@@ -8,6 +8,7 @@
 #define SERVER_REFLUSH_INTERVAL 5000UL // 配置界面重新刷新时间(5s)
 #define DNS_PORT 53                    // DNS端口
 WebServer server(80);
+LV_IMG_DECLARE(app_server);
 
 // DNSServer dnsServer;
 
