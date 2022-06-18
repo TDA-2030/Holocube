@@ -199,36 +199,32 @@ static void date_update()
 
 static long long get_timestamp(String url)
 {
-    if (WL_CONNECTED != WiFi.status())
-        return 0;
+    // HTTPClient http;
+    // http.setTimeout(1000);
+    // http.begin(url);
 
-    String time = "";
-    HTTPClient http;
-    http.setTimeout(1000);
-    http.begin(url);
-
-    int httpCode = http.GET();
-    if (httpCode > 0)
-    {
-        if (httpCode == HTTP_CODE_OK)
-        {
-            String payload = http.getString();
-            Serial.println(payload);
-            int time_index = (payload.indexOf("data")) + 12;
-            time = payload.substring(time_index, payload.length() - 3);
-            // 以网络时间戳为准
-            run_data->preNetTimestamp = atoll(time.c_str()) + run_data->errorNetTimestamp + TIMEZERO_OFFSIZE;
-            run_data->preLocalTimestamp = millis();
-        }
-    }
-    else
-    {
-        Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
-        // 得不到网络时间戳时
-        run_data->preNetTimestamp = run_data->preNetTimestamp + (millis() - run_data->preLocalTimestamp);
-        run_data->preLocalTimestamp = millis();
-    }
-    http.end();
+    // int httpCode = http.GET();
+    // if (httpCode > 0)
+    // {
+    //     if (httpCode == HTTP_CODE_OK)
+    //     {
+    //         String payload = http.getString();
+    //         Serial.println(payload);
+    //         int time_index = (payload.indexOf("data")) + 12;
+    //         time = payload.substring(time_index, payload.length() - 3);
+    //         // 以网络时间戳为准
+    //         run_data->preNetTimestamp = atoll(time.c_str()) + run_data->errorNetTimestamp + TIMEZERO_OFFSIZE;
+    //         run_data->preLocalTimestamp = millis();
+    //     }
+    // }
+    // else
+    // {
+    //     Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
+    //     // 得不到网络时间戳时
+    //     run_data->preNetTimestamp = run_data->preNetTimestamp + (millis() - run_data->preLocalTimestamp);
+    //     run_data->preLocalTimestamp = millis();
+    // }
+    // http.end();
 
     return run_data->preNetTimestamp;
 }

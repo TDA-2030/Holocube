@@ -73,20 +73,20 @@ static MyHttpResult http_request(String uid = "344470052")
 {
     // String url = "http://www.dtmb.top/api/fans/index?id=" + uid;
     MyHttpResult result;
-    String url = FANS_API + uid;
-    HTTPClient *httpClient = new HTTPClient();
-    httpClient->setTimeout(1000);
-    bool status = httpClient->begin(url);
-    if (status == false)
-    {
-        result.httpCode = -1;
-        return result;
-    }
-    int httpCode = httpClient->GET();
-    String httpResponse = httpClient->getString();
-    httpClient->end();
-    result.httpCode = httpCode;
-    result.httpResponse = httpResponse;
+    // String url = FANS_API + uid;
+    // HTTPClient *httpClient = new HTTPClient();
+    // httpClient->setTimeout(1000);
+    // bool status = httpClient->begin(url);
+    // if (status == false)
+    // {
+    //     result.httpCode = -1;
+    //     return result;
+    // }
+    // int httpCode = httpClient->GET();
+    // String httpResponse = httpClient->getString();
+    // httpClient->end();
+    result.httpCode = 0;
+    result.httpResponse = "0";
     return result;
 }
 
@@ -184,7 +184,6 @@ static void update_fans_num()
     }
     if (result.httpCode > 0)
     {
-        if (result.httpCode == HTTP_CODE_OK || result.httpCode == HTTP_CODE_MOVED_PERMANENTLY)
         {
             String payload = result.httpResponse;
             Serial.println("[HTTP] OK");

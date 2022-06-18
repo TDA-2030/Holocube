@@ -1,7 +1,7 @@
 #ifndef APP_PICTURE_H
 #define APP_PICTURE_H
 
-#include "sys/interface.h"
+#include "sys/app_controller.h"
 
 #define IMAGE_PATH "/image"
 

@@ -8,6 +8,7 @@
 #include <esp32-hal-timer.h>
 #include <map>
 
+#define TAG WEATHER_APP_NAME
 #define WEATHER_APP_NAME "Weather"
 #define WEATHER_NOW_API "https://www.yiketianqi.com/free/day?appid=%s&appsecret=%s&unescape=1&city=%s"
 #define WEATHER_NOW_API_UPDATE "https://yiketianqi.com/api?unescape=1&version=v6&appid=%s&appsecret=%s&city=%s"
@@ -85,7 +86,6 @@ struct WeatherAppRunData {
     BaseType_t xReturned_task_task_update; // 更新数据的异步任务
     TaskHandle_t xHandle_task_task_update; // 更新数据的异步任务
 
-    ESP32Time g_rtc; // 用于时间解码
     Weather wea;     // 保存天气状况
 };
 
@@ -115,144 +115,38 @@ static int windLevelAnalyse(String str)
 
 static void get_weather(void)
 {
-    if (WL_CONNECTED != WiFi.status()) {
-        return;
-    }
 
-    HTTPClient http;
-    http.setTimeout(1000);
-    char api[128] = {0};
-    // snprintf(api, 128, WEATHER_NOW_API, cfg_data.tianqi_appid, cfg_data.tianqi_appsecret, cfg_data.tianqi_addr);
-    snprintf(api, 128, WEATHER_NOW_API_UPDATE, cfg_data.tianqi_appid, cfg_data.tianqi_appsecret, cfg_data.tianqi_addr);
-    Serial.print("API = ");
-    Serial.println(api);
-    http.begin(api);
-
-    int httpCode = http.GET();
-    if (httpCode > 0) {
-        // file found at server
-        if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
-            String payload = http.getString();
-            Serial.println(payload);
-            DynamicJsonDocument doc(1024);
-            deserializeJson(doc, payload);
-            JsonObject sk = doc.as<JsonObject>();
-            strcpy(run_data->wea.cityname, sk["city"].as<String>().c_str());
-            run_data->wea.weather_code = weatherMap[sk["wea_img"].as<String>()];
-            run_data->wea.temperature = sk["tem"].as<int>();
-
-            // 获取湿度
-            run_data->wea.humidity = 50;
-            char humidity[8] = {0};
-            strncpy(humidity, sk["humidity"].as<String>().c_str(), 8);
-            humidity[strlen(humidity) - 1] = 0; // 去除尾部的 % 号
-            run_data->wea.humidity = atoi(humidity);
-
-            run_data->wea.maxTemp = sk["tem1"].as<int>();
-            run_data->wea.minTemp = sk["tem2"].as<int>();
-            strcpy(run_data->wea.windDir, sk["win"].as<String>().c_str());
-            run_data->wea.windLevel = windLevelAnalyse(sk["win_speed"].as<String>());
-            run_data->wea.airQulity = airQulityLevel(sk["air"].as<int>());
-        }
-    } else {
-        Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
-    }
-    http.end();
 }
 
-static long long get_timestamp()
-{
-    // 使用本地的机器时钟
-    run_data->preNetTimestamp = run_data->preNetTimestamp + (millis() - run_data->preLocalTimestamp);
-    run_data->preLocalTimestamp = millis();
-    return run_data->preNetTimestamp;
-}
-
-static long long get_timestamp(String url)
-{
-    if (WL_CONNECTED != WiFi.status()) {
-        return 0;
-    }
-
-    String time = "";
-    HTTPClient http;
-    http.setTimeout(1000);
-    http.begin(url);
-
-    int httpCode = http.GET();
-    if (httpCode > 0) {
-        if (httpCode == HTTP_CODE_OK) {
-            String payload = http.getString();
-            Serial.println(payload);
-            int time_index = (payload.indexOf("data")) + 12;
-            time = payload.substring(time_index, payload.length() - 3);
-            // 以网络时间戳为准
-            run_data->preNetTimestamp = atoll(time.c_str()) + run_data->errorNetTimestamp + TIMEZERO_OFFSIZE;
-            run_data->preLocalTimestamp = millis();
-        }
-    } else {
-        Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
-        // 得不到网络时间戳时
-        run_data->preNetTimestamp = run_data->preNetTimestamp + (millis() - run_data->preLocalTimestamp);
-        run_data->preLocalTimestamp = millis();
-    }
-    http.end();
-
-    return run_data->preNetTimestamp;
-}
 
 static void get_daliyWeather(short maxT[], short minT[])
 {
-    if (WL_CONNECTED != WiFi.status()) {
-        return;
-    }
 
-    HTTPClient http;
-    http.setTimeout(1000);
-    char api[128] = {0};
-    snprintf(api, 128, WEATHER_DALIY_API, cfg_data.tianqi_appid, cfg_data.tianqi_appsecret, cfg_data.tianqi_addr);
-    Serial.print("API = ");
-    Serial.println(api);
-    http.begin(api);
-
-    int httpCode = http.GET();
-    if (httpCode > 0) {
-        // file found at server
-        if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
-            String payload = http.getString();
-            Serial.println(payload);
-            DynamicJsonDocument doc(2048);
-            deserializeJson(doc, payload);
-            JsonObject sk = doc.as<JsonObject>();
-            for (int gDW_i = 0; gDW_i < 7; ++gDW_i) {
-                maxT[gDW_i] = sk["data"][gDW_i]["tem_day"].as<int>();
-                minT[gDW_i] = sk["data"][gDW_i]["tem_night"].as<int>();
-            }
-        }
-    } else {
-        Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
-    }
-    http.end();
 }
 
-static void UpdateTime_RTC(long long timestamp)
+static void UpdateTime_RTC(void)
 {
     struct TimeStr t;
-    run_data->g_rtc.setTime(timestamp / 1000);
-    t.month = run_data->g_rtc.getMonth() + 1;
-    t.day = run_data->g_rtc.getDay();
-    t.hour = run_data->g_rtc.getHour(true);
-    t.minute = run_data->g_rtc.getMinute();
-    t.second = run_data->g_rtc.getSecond();
-    t.weekday = run_data->g_rtc.getDayofWeek();
+
+    struct tm timeinfo;
+    time_t now;
+    time(&now);
+    localtime_r(&now, &timeinfo);
+
+    t.month = timeinfo.tm_mon + 1;
+    t.day = timeinfo.tm_mday;
+    t.hour = timeinfo.tm_hour;
+    t.minute = timeinfo.tm_min;
+    t.second = timeinfo.tm_sec;
+    t.weekday = timeinfo.tm_wday;
     // Serial.printf("time : %d-%d-%d\n",t.hour, t.minute, t.second);
     display_time(t, LV_SCR_LOAD_ANIM_NONE);
 }
 
 static int weather_init(AppController *sys)
 {
-    screen.setSwapBytes(true); 
-    weather_gui_init(); 
+    screen.setSwapBytes(true);
+    weather_gui_init();
     // 获取配置信息
     read_config(&cfg_data);
 
@@ -269,27 +163,26 @@ static int weather_init(AppController *sys)
     // 强制更新
     run_data->coactusUpdateFlag = 0x01;
     run_data->update_type = 0x00; // 表示什么也不需要更新
-    
+
     return 0;
 }
 
-static void weather_process(AppController *sys,
-                            const ImuAction *act_info)
+static void weather_process(AppController *sys)
 {
-    
+    APP_ACTIVE_TYPE act_info = sys->act_info;
     lv_scr_load_anim_t anim_type = LV_SCR_LOAD_ANIM_NONE;
 
-    if (RETURN == act_info->active) {
+    if (APP_RETURN == act_info) {
         sys->app_exit();
         return;
-    } else if (GO_FORWORD == act_info->active) {
+    } else if (APP_GO_FORWORD == act_info) {
         // 间接强制更新
         run_data->coactusUpdateFlag = 0x01;
         delay(500); // 以防间接强制更新后，生产很多请求 使显示卡顿
-    } else if (TURN_RIGHT == act_info->active) {
+    } else if (APP_TURN_RIGHT == act_info) {
         anim_type = LV_SCR_LOAD_ANIM_MOVE_RIGHT;
         run_data->clock_page = (run_data->clock_page + 1) % WEATHER_PAGE_SIZE;
-    } else if (TURN_LEFT == act_info->active) {
+    } else if (APP_TURN_LEFT == act_info) {
         anim_type = LV_SCR_LOAD_ANIM_MOVE_LEFT;
         // 以下等效与 clock_page = (clock_page + WEATHER_PAGE_SIZE - 1) % WEATHER_PAGE_SIZE;
         // +3为了不让数据溢出成负数，而导致取模逻辑错误
@@ -310,7 +203,7 @@ static void weather_process(AppController *sys,
             // 尝试同步网络上的时钟
             sys->send_to(WEATHER_APP_NAME, CTRL_NAME, APP_MESSAGE_WIFI_CONN, (void *)UPDATE_NTP, NULL);
         } else if (millis() - run_data->preLocalTimestamp > 400) {
-            UpdateTime_RTC(get_timestamp());
+            UpdateTime_RTC();
         }
         run_data->coactusUpdateFlag = 0x00; // 取消强制更新标志
         // lvgl_acquire();
@@ -324,14 +217,13 @@ static void weather_process(AppController *sys,
     }
 }
 
-static void weather_background_task(AppController *sys,
-                                    const ImuAction *act_info)
+static void weather_background_task(AppController *sys)
 {
     // 本函数为后台任务，主控制器会间隔一分钟调用此函数
     // 本函数尽量只调用"常驻数据",其他变量可能会因为生命周期的缘故已经释放
 }
 
-static int weather_exit_callback(void *param)
+static int weather_exit_callback(AppController *sys)
 {
     weather_gui_del();
 
@@ -348,42 +240,6 @@ static int weather_exit_callback(void *param)
     return 0;
 }
 
-// static void task_update(void *parameter)
-// {
-//     // 数据更新任务
-//     while (1)
-//     {
-//         if (run_data->update_type & UPDATE_WEATHER)
-//         {
-//             get_weather();
-//             if (run_data->clock_page == 0)
-//             {
-//                 display_weather(run_data->wea, LV_SCR_LOAD_ANIM_NONE);
-//             }
-//             run_data->update_type &= (~UPDATE_WEATHER);
-//         }
-//         if (run_data->update_type & UPDATE_TIME)
-//         {
-//             long long timestamp = get_timestamp(TIME_API); // nowapi时间API
-//             if (run_data->clock_page == 0)
-//             {
-//                 UpdateTime_RTC(timestamp);
-//             }
-//             run_data->update_type &= (~UPDATE_TIME);
-//         }
-//         if (run_data->update_type & UPDATE_DALIY_WEATHER)
-//         {
-//             get_daliyWeather(run_data->wea.daily_max, run_data->wea.daily_min);
-//             if (run_data->clock_page == 1)
-//             {
-//                 display_curve(run_data->wea.daily_max, run_data->wea.daily_min, LV_SCR_LOAD_ANIM_NONE);
-//             }
-//             run_data->update_type &= (~UPDATE_DALIY_WEATHER);
-//         }
-//         vTaskDelay(2000 / portTICK_PERIOD_MS);
-//     }
-// }
-
 static void weather_message_handle(const char *from, const char *to,
                                    APP_MESSAGE_TYPE type, void *message,
                                    void *ext_info)
@@ -395,7 +251,7 @@ static void weather_message_handle(const char *from, const char *to,
         int event_id = (int)message;
         switch (event_id) {
         case UPDATE_NOW: {
-            Serial.print(F("weather update.\n"));
+            ESP_LOGI(TAG, "weather update.");
             run_data->update_type |= UPDATE_WEATHER;
 
             get_weather();
@@ -405,17 +261,17 @@ static void weather_message_handle(const char *from, const char *to,
         };
         break;
         case UPDATE_NTP: {
-            Serial.print(F("ntp update.\n"));
+            ESP_LOGI(TAG, "ntp update.");
             run_data->update_type |= UPDATE_TIME;
 
-            long long timestamp = get_timestamp(TIME_API); // nowapi时间API
-            if (run_data->clock_page == 0) {
-                UpdateTime_RTC(timestamp);
-            }
+            // long long timestamp = get_timestamp(TIME_API); // nowapi时间API
+            // if (run_data->clock_page == 0) {
+            //     UpdateTime_RTC(timestamp);
+            // }
         };
         break;
         case UPDATE_DAILY: {
-            Serial.print(F("daliy update.\n"));
+            ESP_LOGI(TAG, "daliy update.");
             run_data->update_type |= UPDATE_DALIY_WEATHER;
 
             get_daliyWeather(run_data->wea.daily_max, run_data->wea.daily_min);

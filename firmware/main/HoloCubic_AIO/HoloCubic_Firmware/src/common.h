@@ -38,21 +38,6 @@ boolean doDelayMillisTime(unsigned long interval,
 
 #define DEBUG_LINE ESP_LOGI(__FUNCTION__, "%s:%d", __FILE__, __LINE__)
 
-struct SysUtilConfig
-{
-    String ssid_0;
-    String password_0;
-    String ssid_1;
-    String password_1;
-    String ssid_2;
-    String password_2;
-    uint8_t power_mode;           // 功耗模式（0为节能模式 1为性能模式）
-    uint8_t backLight;            // 屏幕亮度（1-100）
-    uint8_t rotation;             // 屏幕旋转方向
-    uint8_t auto_calibration_mpu; // 是否自动校准陀螺仪 0关闭自动校准 1打开自动校准
-    uint8_t mpu_order;            // 操作方向
-};
-
 #define VSPI_HOST SPI2_HOST
 
 #endif

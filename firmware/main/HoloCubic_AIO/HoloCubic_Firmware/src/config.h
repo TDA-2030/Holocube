@@ -38,8 +38,5 @@ void config_read(const char *file_path, Config *cfg);
 
 void config_save(const char *file_path, Config *cfg);
 
-void mpu_config_read(const char *file_path, Config *cfg);
-
-void mpu_config_save(const char *file_path, Config *cfg);
 
 #endif

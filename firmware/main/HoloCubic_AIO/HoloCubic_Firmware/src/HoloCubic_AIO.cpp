@@ -11,8 +11,9 @@
 
 #include "driver/display.h"
 #include "driver/lv_port_fatfs.h"
+#include "driver/imu.h"
 #include "common.h"
-
+#include "app_sntp.h"
 #include "sys/app_controller.h"
 
 #include "app/weather/weather.h"
@@ -29,57 +30,37 @@
 #include <esp32-hal.h>
 #include <esp32-hal-timer.h>
 
-static bool isCheckAction = false;
-
-static ImuAction *act_info; // 存放mpu6050返回的数据
-
 AppController *app_controller; // APP控制器
 
-TimerHandle_t xTimerAction = NULL;
-void actionCheckHandle(TimerHandle_t xTimer)
-{
-    // 标志需要检测动作
-    isCheckAction = true;
-}
 
 static void memdisk_init(void)
 {
-    if (!SPIFFS.begin(true))
-    {
+    if (!SPIFFS.begin(true)) {
         Serial.println("SPIFFS Mount Failed");
         return;
     }
 
     SPIClass *sd_spi = new SPIClass(HSPI); // another SPI
     sd_spi->begin(2, 3, 4, 5);         // Replace default HSPI pins
-    if (!SD.begin(5, *sd_spi, 80000000))  // SD-Card SS pin is 15
-    {
+    if (!SD.begin(5, *sd_spi, 80000000)) { // SD-Card SS pin is 15
         Serial.println("Card Mount Failed");
         return;
     }
     uint8_t cardType = SD.cardType();
 
-    if (cardType == CARD_NONE)
-    {
+    if (cardType == CARD_NONE) {
         Serial.println("No SD card attached");
         return;
     }
 
     Serial.print("SD Card Type: ");
-    if (cardType == CARD_MMC)
-    {
+    if (cardType == CARD_MMC) {
         Serial.println("MMC");
-    }
-    else if (cardType == CARD_SD)
-    {
+    } else if (cardType == CARD_SD) {
         Serial.println("SDSC");
-    }
-    else if (cardType == CARD_SDHC)
-    {
+    } else if (cardType == CARD_SDHC) {
         Serial.println("SDHC");
-    }
-    else
-    {
+    } else {
         Serial.println("UNKNOWN");
     }
 
@@ -89,6 +70,9 @@ static void memdisk_init(void)
 
 void setup()
 {
+    
+    g_network.config();
+    app_sntp_init();
     Serial.begin(115200);
 
     Serial.println(F("\nAIO (All in one) version " AIO_VERSION "\n"));
@@ -100,13 +84,10 @@ void setup()
 
     memdisk_init();
 
-    // config_read(NULL, &g_cfg);   // 旧的配置文件读取方式
     app_controller->read_config(&app_controller->sys_cfg);
-    app_controller->read_config(&app_controller->mpu_cfg);
-    // app_controller->read_config(&app_controller->rgb_cfg);
 
     /*** Init screen ***/
-    screen.init(3,//app_controller->sys_cfg.rotation,
+    screen.init(0,//app_controller->sys_cfg.rotation,
                 app_controller->sys_cfg.backLight);
 
     /*** Init micro SD-Card ***/
@@ -115,38 +96,28 @@ void setup()
     app_controller->init();
     // 将APP"安装"到controller里
     app_controller->app_install(&weather_app);
-    app_controller->app_install(&picture_app);
+    // app_controller->app_install(&picture_app);
     // app_controller->app_install(&media_app);
     app_controller->app_install(&screen_share_app);
-    app_controller->app_install(&file_manager_app);
-    app_controller->app_install(&server_app);
-    app_controller->app_install(&bilibili_app);
-    app_controller->app_install(&settings_app);
+    // app_controller->app_install(&file_manager_app);
+    // app_controller->app_install(&server_app);
+    // app_controller->app_install(&bilibili_app);
+    // app_controller->app_install(&settings_app);
     app_controller->app_install(&audio_spectrum_app);
-    app_controller->app_install(&anniversary_app);
+    // app_controller->app_install(&anniversary_app);
 
-    app_controller->main_process(&mpu.action_info);
+    // app_controller->main_process(&mpu.action_info);
     /*** Init IMU as input device ***/
     lv_port_indev_init();
-    mpu.init(app_controller->sys_cfg.mpu_order,
-             app_controller->sys_cfg.auto_calibration_mpu,
-             &app_controller->mpu_cfg); // 初始化比较耗时
+    mpu.init(app_controller->sys_cfg.mpu_order, 1); // 初始化比较耗时
 
-    // 定义一个mpu6050的动作检测定时器
-    xTimerAction = xTimerCreate("Action Check",
-                                200 / portTICK_PERIOD_MS,
-                                pdTRUE, (void *)0, actionCheckHandle);
-    xTimerStart(xTimerAction, 0);
-    act_info = mpu.getAction();
 }
 
 void loop()
 {
     screen.routine();
-    if (isCheckAction)
-    {
-        isCheckAction = false;
-        act_info = mpu.getAction();
-    }
-    app_controller->main_process(act_info); // 运行当前进程
+    ImuAction *act_info = mpu.getAction();
+    printf("[Operate] active: %s\n", mpu.getActionname(act_info->active));
+    app_controller->main_process((APP_ACTIVE_TYPE)act_info->active); // 运行当前进程
+    act_info->isValid = 0;
 }

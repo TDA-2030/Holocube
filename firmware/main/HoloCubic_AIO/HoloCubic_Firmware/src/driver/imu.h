@@ -5,11 +5,8 @@
 
 #ifdef __cplusplus
 
-#include <I2Cdev.h>
 #include <MPU6050.h>
-#include "display.h"
-#include "lvgl.h"
-#include <list>
+
 #define ACTION_HISTORY_BUF_LEN 5
 
 
@@ -45,8 +42,8 @@ struct SysMpuConfig {
 
 struct ImuAction {
     volatile ACTIVE_TYPE active;
-    boolean isValid;
-    boolean long_time;
+    bool isValid;
+    bool long_time;
     int16_t v_ax; // v表示虚拟参数（用于调整6050的初始方位）
     int16_t v_ay;
     int16_t v_az;
@@ -59,23 +56,23 @@ class IMU {
 private:
     MPU6050 mpu;
     long last_update_time;
+    TimerHandle_t xTimerAction = NULL;
     uint8_t order; // 表示方位，x与y是否对换
-
-public:
     ImuAction action_info;
-    // 用来储存历史动作
-    // std::list<ACTIVE_TYPE> act_info_history;
+    void getVirtureMotion6(ImuAction *action_info);
+    
+    
+public:
     ACTIVE_TYPE act_info_history[ACTION_HISTORY_BUF_LEN];
     int act_info_history_ind; // 标志储存的位置
 
 public:
     IMU();
-    void init(uint8_t order, uint8_t auto_calibration, SysMpuConfig *mpu_cfg);
+    void init(uint8_t order, uint8_t auto_calibration);
     const char *getActionname(ACTIVE_TYPE active);
     void setOrder(uint8_t order); // 设置方向
-    ImuAction *update(int interval);
+    void update_attitude(void);
     ImuAction *getAction(void); // 获取动作
-    void getVirtureMotion6(ImuAction *action_info);
 };
 
 #endif

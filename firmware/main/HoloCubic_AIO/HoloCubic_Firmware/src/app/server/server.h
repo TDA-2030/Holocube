@@ -1,7 +1,7 @@
 #ifndef APP_SERVER_H
 #define APP_SERVER_H
 
-#include "sys/interface.h"
+#include "sys/app_controller.h"
 #define SERVER_APP_NAME "WebServer"
 
 #ifdef ESP8266

@@ -1,4 +1,3 @@
-#include "message.h"
 #include "file_manager.h"
 #include "file_manager_gui.h"
 #include "sys/app_controller.h"
@@ -58,7 +57,7 @@ static void file_maneger_process(AppController *sys,
         // 预显示
         display_file_manager(
             "File Manager",
-            WiFi.softAPIP().toString().c_str(),
+            "WiFi.softAPIP().toString().c_str()",
             "21",
             "Wait connect ....",
             LV_SCR_LOAD_ANIM_NONE);
@@ -122,7 +121,7 @@ static void file_maneger_message_handle(const char *from, const char *to,
         Serial.print(F("APP_MESSAGE_WIFI_AP enable\n"));
         display_file_manager(
             "File Manager",
-            WiFi.localIP().toString().c_str(),
+            "WiFi.localIP().toString().c_str()",
             "21",
             "Connect succ",
             LV_SCR_LOAD_ANIM_NONE);
@@ -135,7 +134,7 @@ static void file_maneger_message_handle(const char *from, const char *to,
         Serial.print(F("APP_MESSAGE_WIFI_AP enable\n"));
         display_file_manager(
             "File Manager",
-            WiFi.localIP().toString().c_str(),
+            "WiFi.localIP().toString().c_str()",
             "21",
             "Connect succ",
             LV_SCR_LOAD_ANIM_NONE);

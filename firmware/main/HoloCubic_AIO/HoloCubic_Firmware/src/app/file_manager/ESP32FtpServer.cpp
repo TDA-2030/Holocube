@@ -22,8 +22,7 @@
 
 #include "ESP32FtpServer.h"
 
-#include <WiFi.h>
-#include <WiFiClient.h>
+
 //#include <ESP32WebServer.h>
 #include <FS.h>
 #include "SD.h"

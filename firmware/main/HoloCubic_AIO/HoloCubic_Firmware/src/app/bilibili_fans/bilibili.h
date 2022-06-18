@@ -3,7 +3,7 @@
 
 
 #define BILI_APP_NAME "Bili"
-#include "sys/interface.h"
+#include "sys/app_controller.h"
 
 extern APP_OBJ bilibili_app;
 

@@ -9,7 +9,7 @@
 #include "esp_lcd_panel_vendor.h"
 #include "esp_lcd_panel_ops.h"
 #include "driver/gpio.h"
-
+#include "lvgl.h"
 #include "display.h"
 #include "network.h"
 #include "common.h"

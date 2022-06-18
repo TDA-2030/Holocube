@@ -30,7 +30,7 @@ static ExampleAppRunData *run_data = NULL;
 static ExampleAppForeverData forever_data;
 
 
-    void ap_start(void);
+void ap_start(void);
 
 
 static int example_init(AppController *sys)
@@ -59,10 +59,10 @@ static int example_init(AppController *sys)
     return 0;
 }
 
-static void example_process(AppController *sys,
-                            const ImuAction *act_info)
+static void example_process(AppController *sys)
 {
-    if (RETURN == act_info->active) {
+    APP_ACTIVE_TYPE act_info = sys->act_info;
+    if (APP_RETURN == act_info) {
         sys->app_exit(); // 退出APP
         return;
     }
@@ -74,8 +74,7 @@ static void example_process(AppController *sys,
     // delay(300);
 }
 
-static void example_background_task(AppController *sys,
-                                    const ImuAction *act_info)
+static void example_background_task(AppController *sys)
 {
     // 本函数为后台任务，主控制器会间隔一分钟调用此函数
     // 本函数尽量只调用"常驻数据",其他变量可能会因为生命周期的缘故已经释放
@@ -91,7 +90,7 @@ static void example_background_task(AppController *sys,
     // delay(300);
 }
 
-static int example_exit_callback(void *param)
+static int example_exit_callback(AppController *sys)
 {
     // 释放资源
     if (NULL != run_data) {
