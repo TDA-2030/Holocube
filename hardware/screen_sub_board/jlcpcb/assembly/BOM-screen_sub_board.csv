@@ -1,0 +1,8 @@
+Comment,Designator,Footprint,LCSC
+S8050,Q1,SOT-23,
+22R,R1,R_0402_1005Metric,
+Conn_01x08_MountingPin,J1,TE_0-1734839-8_1x08-1MP_P0.5mm_Horizontal,
+1uf,C1,C_0402_1005Metric,
+LCD_1.3_240x240_ST7789,U1,LCD_1.3_240x240_ST7789,
+10K,R2,R_0402_1005Metric,
+1uf,C2,C_0402_1005Metric,

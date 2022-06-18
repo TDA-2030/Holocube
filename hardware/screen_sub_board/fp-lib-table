@@ -1,0 +1,3 @@
+(fp_lib_table
+  (lib (name "misc")(type "KiCad")(uri "/home/zhouli/Desktop/holocubic/hardware/main_board/my-kicad-lib/misc.pretty")(options "")(descr ""))
+)

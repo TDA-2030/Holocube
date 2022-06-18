@@ -1,0 +1,8 @@
+Designator,Val,Package,Mid X,Mid Y,Rotation,Layer
+C1,1uf,C_0402_1005Metric,143.4,-103.2,180.0,top
+C2,1uf,C_0402_1005Metric,143.4,-104.1,180.0,top
+J1,Conn_01x08_MountingPin,TE_0-1734839-8_1x08-1MP_P0.5mm_Horizontal,131.675,-98.8,90.0,top
+Q1,S8050,SOT-23,140.8,-103.7,-90.0,top
+R1,22R,R_0402_1005Metric,143.4,-105.0,180.0,top
+R2,10K,R_0402_1005Metric,143.4,-102.3,0.0,top
+U1,LCD_1.3_240x240_ST7789,LCD_1.3_240x240_ST7789,146.975,-105.4,0.0,top
