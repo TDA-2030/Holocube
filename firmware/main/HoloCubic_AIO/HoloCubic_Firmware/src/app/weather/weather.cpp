@@ -1,6 +1,6 @@
 #include "weather.h"
 #include "weather_gui.h"
-#include "ESP32Time.h"
+#include "HTTPClient.h"
 #include "sys/app_controller.h"
 #include "network.h"
 #include "common.h"
@@ -115,9 +115,50 @@ static int windLevelAnalyse(String str)
 
 static void get_weather(void)
 {
+    if (0 == g_network.isconnected()) {
+        return;
+    }
 
+    // HTTPClient http;
+    // http.setTimeout(1000);
+    // char api[128] = {0};
+    // // snprintf(api, 128, WEATHER_NOW_API, cfg_data.tianqi_appid, cfg_data.tianqi_appsecret, cfg_data.tianqi_addr);
+    // snprintf(api, 128, WEATHER_NOW_API_UPDATE, cfg_data.tianqi_appid, cfg_data.tianqi_appsecret, cfg_data.tianqi_addr);
+    // Serial.print("API = ");
+    // Serial.println(api);
+    // http.begin(api);
+
+    // int httpCode = http.GET();
+    // if (httpCode > 0) {
+    //     // file found at server
+    //     if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+    //         String payload = http.getString();
+    //         Serial.println(payload);
+    //         DynamicJsonDocument doc(1024);
+    //         deserializeJson(doc, payload);
+    //         JsonObject sk = doc.as<JsonObject>();
+    //         strcpy(run_data->wea.cityname, sk["city"].as<String>().c_str());
+    //         run_data->wea.weather_code = weatherMap[sk["wea_img"].as<String>()];
+    //         run_data->wea.temperature = sk["tem"].as<int>();
+
+    //         // 获取湿度
+    //         run_data->wea.humidity = 50;
+    //         char humidity[8] = {0};
+    //         strncpy(humidity, sk["humidity"].as<String>().c_str(), 8);
+    //         humidity[strlen(humidity) - 1] = 0; // 去除尾部的 % 号
+    //         run_data->wea.humidity = atoi(humidity);
+
+    //         run_data->wea.maxTemp = sk["tem1"].as<int>();
+    //         run_data->wea.minTemp = sk["tem2"].as<int>();
+    //         strcpy(run_data->wea.windDir, sk["win"].as<String>().c_str());
+    //         run_data->wea.windLevel = windLevelAnalyse(sk["win_speed"].as<String>());
+    //         run_data->wea.airQulity = airQulityLevel(sk["air"].as<int>());
+    //     }
+    // } else {
+    //     Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
+    // }
+    // http.end();
 }
-
 
 static void get_daliyWeather(short maxT[], short minT[])
 {
