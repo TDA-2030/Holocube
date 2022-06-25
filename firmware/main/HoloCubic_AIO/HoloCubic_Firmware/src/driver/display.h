@@ -43,6 +43,8 @@ public:
     void setAddrWindow(int16_t x, int16_t y, uint16_t w, uint16_t h) {}
     virtual void writeColor(uint16_t color) {}
 
+    void lvgl_suspend(void);
+    void lvgl_resume(void);
 private:
     int _width;
     int _height;

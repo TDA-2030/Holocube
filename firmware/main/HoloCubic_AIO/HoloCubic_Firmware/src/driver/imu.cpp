@@ -4,15 +4,20 @@
 #include "imu.h"
 #include "common.h"
 
+static const char *TAG = "imu";
 static const char *active_type_info[] = {"TURN_RIGHT", "RETURN",
                                          "TURN_LEFT", "UP",
                                          "DOWN", "GO_FORWORD",
                                          "SHAKE", "UNKNOWN"
                                         };
+static TaskHandle_t g_imu_task_handle;
 
-void actionCheckHandle(TimerHandle_t xTimer)
+static void imu_task(void *args)
 {
-    mpu.update_attitude();
+    while (1) {
+        mpu.update_attitude();
+        vTaskDelay(pdMS_TO_TICKS(200));
+    }
 }
 
 IMU::IMU()
@@ -146,9 +151,10 @@ void IMU::init(uint8_t order, uint8_t auto_calibration)
 
     Serial.print(F("Initialization MPU6050 success.\n"));
 
-    // 定义一个mpu6050的动作检测定时器
-    xTimerAction = xTimerCreate("Action Check", 200 / portTICK_PERIOD_MS, pdTRUE, (void *)0, actionCheckHandle);
-    xTimerStart(xTimerAction, 0);
+    BaseType_t ret_val = xTaskCreatePinnedToCore(imu_task, "imu_task", 3 * 1024, NULL, 2, &g_imu_task_handle, 0);
+    if (pdPASS != ret_val) {
+        ESP_LOGE(TAG, "imu task creat failed");
+    }
 }
 
 void IMU::setOrder(uint8_t order) // 设置方向

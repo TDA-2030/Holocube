@@ -5,14 +5,13 @@
 
 #ifdef __cplusplus
 
-class Network
-{
+class Network {
 private:
     unsigned long m_preDisWifiConnInfoMillis; // 保存上一回显示连接状态的时间戳
 
 public:
     Network();
-void config(void);
+    void config(void);
     bool isconnected(void);
     // void search_wifi(void);
     // boolean start_conn_wifi(const char *ssid, const char *password);

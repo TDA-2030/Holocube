@@ -56,13 +56,10 @@ class IMU {
 private:
     MPU6050 mpu;
     long last_update_time;
-    TimerHandle_t xTimerAction = NULL;
     uint8_t order; // 表示方位，x与y是否对换
     ImuAction action_info;
     void getVirtureMotion6(ImuAction *action_info);
-    
-    
-public:
+
     ACTIVE_TYPE act_info_history[ACTION_HISTORY_BUF_LEN];
     int act_info_history_ind; // 标志储存的位置
 

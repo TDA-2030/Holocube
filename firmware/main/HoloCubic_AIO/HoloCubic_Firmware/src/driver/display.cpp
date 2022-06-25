@@ -14,7 +14,6 @@
 #include "network.h"
 #include "common.h"
 
-
 static lv_disp_drv_t disp_drv;
 static lv_disp_buf_t disp_buf;
 
@@ -269,7 +268,6 @@ void Display::init(uint8_t rotation, uint8_t backLight)
     disp_drv.ver_res = _height;
     disp_drv.flush_cb = my_disp_flush;
     disp_drv.buffer = &disp_buf;
-    // 开启 LV_COLOR_SCREEN_TRANSP 屏幕具有透明和不透明样式
     lv_disp_drv_register(&disp_drv);
 
     const uint32_t tick_inc_period_ms = 5;
@@ -286,13 +284,23 @@ void Display::init(uint8_t rotation, uint8_t backLight)
     /* The timer has been created but is not running yet. Start the timer now */
     ESP_ERROR_CHECK(esp_timer_start_periodic(periodic_timer, tick_inc_period_ms * 1000));
 
-    // BaseType_t ret_val = xTaskCreatePinnedToCore(lvgl_task, "lvgl_Task", 6 * 1024, NULL, configMAX_PRIORITIES - 3, &g_lvgl_task_handle, 0);
-    // ESP_ERROR_CHECK((pdPASS == ret_val) ? ESP_OK : ESP_FAIL);
+    BaseType_t ret_val = xTaskCreatePinnedToCore(lvgl_task, "lvgl_Task", 6 * 1024, NULL, configMAX_PRIORITIES - 3, &g_lvgl_task_handle, 0);
+    ESP_ERROR_CHECK((pdPASS == ret_val) ? ESP_OK : ESP_FAIL);
 }
 
 void Display::routine(void)
 {
-    lv_task_handler();
+    // lv_task_handler();
+}
+
+void Display::lvgl_suspend(void)
+{
+    vTaskSuspend(g_lvgl_task_handle);
+}
+
+void Display::lvgl_resume(void)
+{
+    vTaskResume(g_lvgl_task_handle);
 }
 
 void Display::setBackLight(float duty)

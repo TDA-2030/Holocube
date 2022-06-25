@@ -13,7 +13,6 @@
 #include "driver/lv_port_fatfs.h"
 #include "driver/imu.h"
 #include "common.h"
-#include "app_sntp.h"
 #include "sys/app_controller.h"
 
 #include "app/weather/weather.h"
@@ -30,55 +29,55 @@
 #include <esp32-hal.h>
 #include <esp32-hal-timer.h>
 
-AppController *app_controller; // APP控制器
+static const char *TAG = "Holo Main";
 
+AppController *app_controller; // APP控制器
 
 static void memdisk_init(void)
 {
     if (!SPIFFS.begin(true)) {
-        Serial.println("SPIFFS Mount Failed");
+        ESP_LOGI(TAG, "SPIFFS Mount Failed");
         return;
     }
 
     SPIClass *sd_spi = new SPIClass(HSPI); // another SPI
     sd_spi->begin(2, 3, 4, 5);         // Replace default HSPI pins
     if (!SD.begin(5, *sd_spi, 80000000)) { // SD-Card SS pin is 15
-        Serial.println("Card Mount Failed");
+        ESP_LOGI(TAG, "Card Mount Failed");
         return;
     }
     uint8_t cardType = SD.cardType();
 
     if (cardType == CARD_NONE) {
-        Serial.println("No SD card attached");
+        ESP_LOGI(TAG, "No SD card attached");
         return;
     }
 
-    Serial.print("SD Card Type: ");
+    ESP_LOGI(TAG, "SD Card Type: ");
     if (cardType == CARD_MMC) {
-        Serial.println("MMC");
+        ESP_LOGI(TAG, "MMC");
     } else if (cardType == CARD_SD) {
-        Serial.println("SDSC");
+        ESP_LOGI(TAG, "SDSC");
     } else if (cardType == CARD_SDHC) {
-        Serial.println("SDHC");
+        ESP_LOGI(TAG, "SDHC");
     } else {
-        Serial.println("UNKNOWN");
+        ESP_LOGI(TAG, "UNKNOWN");
     }
 
     uint64_t cardSize = SD.cardSize() / (1024 * 1024);
-    Serial.printf("SD Card Size: %lluMB\n", cardSize);
+    ESP_LOGI(TAG, "SD Card Size: %lluMB", cardSize);
 }
 
 void setup()
 {
-    
-    g_network.config();
-    app_sntp_init();
     Serial.begin(115200);
 
-    Serial.println(F("\nAIO (All in one) version " AIO_VERSION "\n"));
+    ESP_LOGI(TAG, "AIO (All in one) version " AIO_VERSION );
+
     // MAC ID可用作芯片唯一标识
-    Serial.print(F("ChipID(EfuseMac): "));
-    Serial.println(ESP.getEfuseMac());
+    uint64_t _chipmacid = 0LL;
+    esp_efuse_mac_get_default((uint8_t *) (&_chipmacid));
+    ESP_LOGI(TAG, "ChipID(EfuseMac): %0X", _chipmacid);
 
     app_controller = new AppController(); // APP控制器
 
@@ -92,6 +91,8 @@ void setup()
 
     /*** Init micro SD-Card ***/
     lv_fs_if_init();
+
+    g_network.config();
 
     app_controller->init();
     // 将APP"安装"到controller里

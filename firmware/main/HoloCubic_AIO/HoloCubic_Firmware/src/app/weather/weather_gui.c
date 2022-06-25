@@ -31,10 +31,10 @@ static lv_obj_t *spaceImg = NULL;
 static lv_chart_series_t *ser1, *ser2;
 
 // 天气图标路径的映射关系
-const void *weaImage_map[] = {&weather_0, &weather_9, &weather_14, &weather_5, &weather_25,
+static const void *weaImage_map[] = {&weather_0, &weather_9, &weather_14, &weather_5, &weather_25,
                               &weather_30, &weather_26, &weather_11, &weather_23};
 // 太空人图标路径的映射关系
-const void *manImage_map[] = {&man_0, &man_1, &man_2, &man_3, &man_4, &man_5, &man_6, &man_7, &man_8, &man_9};
+static const void *manImage_map[] = {&man_0, &man_1, &man_2, &man_3, &man_4, &man_5, &man_6, &man_7, &man_8, &man_9};
 static const char weekDayCh[7][4] = {"日", "一", "二", "三", "四", "五", "六"};
 static const char airQualityCh[6][10] = {"优", "良", "轻度", "中度", "重度", "严重"};
 

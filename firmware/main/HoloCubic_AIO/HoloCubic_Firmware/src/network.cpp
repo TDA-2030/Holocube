@@ -3,17 +3,15 @@
 #include "nvs_flash.h"
 #include "captive_portal.h"
 #include "esp_log.h"
+#include "esp_check.h"
+#include "app_sntp.h"
 
 static const char *TAG = "network";
 
-Network::Network()
-{
-    ESP_LOGI(TAG, "Network construct");
-    m_preDisWifiConnInfoMillis = 0;
+static TaskHandle_t g_net_task_handle;
+static bool is_connected = 0;
 
-}
-
-void Network::config(void)
+static void net_task(void *args)
 {
     esp_err_t ret = ESP_OK;
     bool is_configured;
@@ -38,9 +36,34 @@ void Network::config(void)
         // paint_roll_text_set_string("未联网，请进入192.168.4.1进行配网", &Font16_gbk);
         ret = captive_portal_wait(portMAX_DELAY);
     }
+    is_connected = 1;
+    app_sntp_init();
+    while (1) {
+        vTaskDelay(pdMS_TO_TICKS(500));
+    }
+}
+
+Network::Network()
+{
+    ESP_LOGI(TAG, "Network construct");
+    m_preDisWifiConnInfoMillis = 0;
+    is_connected = 0;
+}
+
+void Network::config(void)
+{
+    if (NULL != g_net_task_handle) {
+        ESP_LOGE(TAG, "net task already created");
+        return;
+    }
+
+    BaseType_t ret_val = xTaskCreatePinnedToCore(net_task, "net_task", 3 * 1024, NULL, 2, &g_net_task_handle, 0);
+    if (pdPASS != ret_val) {
+        ESP_LOGE(TAG, "net task creat failed");
+    }
 }
 
 bool Network::isconnected(void)
 {
-    return 1;
+    return is_connected;
 }

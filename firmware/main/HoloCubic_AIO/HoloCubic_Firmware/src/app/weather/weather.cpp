@@ -5,7 +5,6 @@
 #include "network.h"
 #include "common.h"
 #include "ArduinoJson.h"
-#include <esp32-hal-timer.h>
 #include <map>
 
 #define TAG WEATHER_APP_NAME
@@ -15,6 +14,7 @@
 #define WEATHER_DALIY_API "https://www.yiketianqi.com/free/week?unescape=1&appid=%s&appsecret=%s&city=%s"
 #define TIME_API "http://api.m.taobao.com/rest/api3.do?api=mtop.common.gettimestamp"
 #define WEATHER_PAGE_SIZE 2
+
 #define UPDATE_WEATHER 0x01       // 更新天气
 #define UPDATE_DALIY_WEATHER 0x02 // 更新每天天气
 #define UPDATE_TIME 0x04          // 更新时间
@@ -82,9 +82,6 @@ struct WeatherAppRunData {
     unsigned int coactusUpdateFlag; // 强制更新标志
     int clock_page;
     unsigned int update_type; // 更新类型的标志位
-
-    BaseType_t xReturned_task_task_update; // 更新数据的异步任务
-    TaskHandle_t xHandle_task_task_update; // 更新数据的异步任务
 
     Weather wea;     // 保存天气状况
 };
@@ -186,7 +183,6 @@ static void UpdateTime_RTC(void)
 
 static int weather_init(AppController *sys)
 {
-    screen.setSwapBytes(true);
     weather_gui_init();
     // 获取配置信息
     read_config(&cfg_data);
@@ -232,9 +228,9 @@ static void weather_process(AppController *sys)
 
     // 界面刷新
     if (run_data->clock_page == 0) {
-        // lvgl_acquire();
+        lvgl_acquire();
         display_weather(run_data->wea, anim_type);
-        // lvgl_release();
+        lvgl_release();
         if (0x01 == run_data->coactusUpdateFlag || doDelayMillisTime(cfg_data.weatherUpdataInterval, &run_data->preWeatherMillis, false)) {
             sys->send_to(WEATHER_APP_NAME, CTRL_NAME, APP_MESSAGE_WIFI_CONN, (void *)UPDATE_NOW, NULL);
             sys->send_to(WEATHER_APP_NAME, CTRL_NAME, APP_MESSAGE_WIFI_CONN, (void *)UPDATE_DAILY, NULL);
@@ -247,13 +243,15 @@ static void weather_process(AppController *sys)
             UpdateTime_RTC();
         }
         run_data->coactusUpdateFlag = 0x00; // 取消强制更新标志
-        // lvgl_acquire();
+        lvgl_acquire();
         display_space();
-        // lvgl_release();
+        lvgl_release();
         delay(30);
     } else if (run_data->clock_page == 1) {
         // 仅在切换界面时获取一次未来天气
+        lvgl_acquire();
         display_curve(run_data->wea.daily_max, run_data->wea.daily_min, anim_type);
+        lvgl_release();
         delay(300);
     }
 }
@@ -267,11 +265,6 @@ static void weather_background_task(AppController *sys)
 static int weather_exit_callback(AppController *sys)
 {
     weather_gui_del();
-
-    // 查杀异步任务
-    if (run_data->xReturned_task_task_update == pdPASS) {
-        vTaskDelete(run_data->xHandle_task_task_update);
-    }
 
     // 释放运行数据
     if (NULL != run_data) {
